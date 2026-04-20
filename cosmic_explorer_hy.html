@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Cosmic Explorer — Տիեzеркի Нетахуjz</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;cursor:none;}
+canvas{display:block;position:fixed;inset:0;}
+
+/* custom cursor */
+#cursor{position:fixed;width:22px;height:22px;border:2px solid rgba(0,200,255,.7);
+  border-radius:50%;pointer-events:none;z-index:9999;transition:transform .1s;
+  transform:translate(-50%,-50%);}
+#cursor::after{content:'';position:absolute;inset:6px;background:rgba(0,200,255,.5);
+  border-radius:50%;}
+
+/* HUD */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:10;}
+
+/* top-left: ship stats */
+#stats{position:absolute;top:16px;left:18px;display:flex;flex-direction:column;gap:7px;}
+.stat-row{display:flex;align-items:center;gap:8px;}
+.stat-icon{font-size:13px;width:18px;text-align:center;}
+.stat-label{font-family:'Orbitron',monospace;font-size:8px;letter-spacing:2px;
+  color:rgba(0,180,255,.45);width:52px;}
+.stat-bar{width:90px;height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;}
+.stat-fill{height:100%;border-radius:2px;transition:width .4s,background .4s;}
+#shFill{background:linear-gradient(90deg,#00f5ff,#0055ff);box-shadow:0 0 6px #00f5ff88;}
+#fuFill{background:linear-gradient(90deg,#ffd700,#ff7700);box-shadow:0 0 6px #ffd70088;}
+.stat-num{font-family:'Orbitron',monospace;font-size:10px;color:rgba(255,255,255,.6);
+  width:26px;text-align:right;}
+
+/* top-center: score + destination */
+#topcenter{position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:4px;}
+#scoreLbl{font-family:'Orbitron',monospace;font-size:8px;letter-spacing:3px;
+  color:rgba(0,200,255,.4);}
+#scoreNum{font-family:'Orbitron',monospace;font-size:clamp(20px,3.5vw,32px);
+  font-weight:900;color:#fff;
+  text-shadow:0 0 15px rgba(0,200,255,.6),0 0 30px rgba(0,200,255,.25);
+  letter-spacing:2px;}
+#destRow{display:flex;align-items:center;gap:7px;margin-top:2px;}
+#destLbl{font-family:'Orbitron',monospace;font-size:8px;letter-spacing:2px;
+  color:rgba(255,200,100,.45);}
+#destName{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;
+  color:rgba(255,200,100,.85);text-shadow:0 0 10px rgba(255,200,100,.4);}
+
+/* top-right: lives + combo */
+#topright{position:absolute;top:14px;right:18px;
+  display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+#livesRow{display:flex;gap:5px;}
+.lship{font-size:14px;transition:.3s;}
+.lship.dead{filter:grayscale(1);opacity:.18;}
+#comboBox{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;
+  color:#ff79c6;text-shadow:0 0 12px #ff79c6;
+  opacity:0;transition:opacity .3s;text-align:right;}
+#killCount{font-family:'Orbitron',monospace;font-size:10px;
+  color:rgba(160,200,255,.55);text-align:right;}
+
+/* solar map - bottom */
+#solarMap{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:0;}
+.sm-node{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:default;}
+.sm-dot{border-radius:50%;border:2px solid transparent;transition:all .4s;
+  display:flex;align-items:center;justify-content:center;font-size:9px;}
+.sm-name{font-family:'Orbitron',monospace;font-size:7px;letter-spacing:1px;
+  color:rgba(255,255,255,.3);transition:.4s;}
+.sm-line{height:2px;width:20px;background:rgba(255,255,255,.08);
+  border-radius:1px;transition:.4s;}
+.sm-line.done{background:rgba(0,200,255,.5);}
+.sm-dot.done{border-color:rgba(0,200,255,.6);background:rgba(0,200,255,.12);}
+.sm-dot.current{border-color:#ffd700;box-shadow:0 0 12px rgba(255,215,0,.5);
+  animation:smPulse 1.5s ease-in-out infinite;}
+.sm-dot.current .sm-name{color:#ffd700;}
+@keyframes smPulse{0%,100%{box-shadow:0 0 8px rgba(255,215,0,.4)}
+  50%{box-shadow:0 0 20px rgba(255,215,0,.7)}}
+.sm-dot.locked{border-color:rgba(255,255,255,.1);background:transparent;}
+
+/* fact bubble - appears in space */
+#factBubble{
+  position:absolute;max-width:280px;
+  background:linear-gradient(135deg,rgba(0,10,40,.92),rgba(0,5,25,.95));
+  border:1px solid rgba(0,180,255,.25);border-radius:12px;
+  padding:13px 16px;pointer-events:none;
+  opacity:0;transition:opacity .5s;
+  box-shadow:0 8px 40px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05);
+}
+#factBubble.show{opacity:1;}
+.fb-tag{font-family:'Orbitron',monospace;font-size:8px;letter-spacing:2px;
+  color:rgba(0,200,255,.5);margin-bottom:6px;}
+.fb-text{font-family:'Exo 2',sans-serif;font-size:13px;line-height:1.6;
+  color:rgba(200,230,255,.9);font-weight:300;}
+.fb-icon{font-size:22px;float:right;margin-left:10px;}
+
+/* planet approach panel */
+#approachPanel{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-60%) scale(.9);
+  width:min(90vw,520px);
+  background:linear-gradient(160deg,rgba(2,0,22,.97),rgba(1,0,15,.98));
+  border:1px solid rgba(0,180,255,.2);border-radius:16px;
+  padding:22px 24px 20px;pointer-events:all;
+  opacity:0;transition:opacity .4s,transform .4s;z-index:30;
+  box-shadow:0 30px 80px rgba(0,0,0,.8),0 0 60px rgba(0,50,200,.12);
+}
+#approachPanel.open{opacity:1;transform:translate(-50%,-60%) scale(1);}
+.ap-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.ap-planet-icon{width:52px;height:52px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:24px;}
+.ap-info{flex:1;}
+.ap-planet-name{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;
+  color:#fff;letter-spacing:2px;line-height:1;}
+.ap-planet-sub{font-family:'Exo 2',sans-serif;font-size:12px;
+  color:rgba(200,220,255,.5);margin-top:4px;font-style:italic;}
+.ap-timer-ring{position:relative;width:44px;height:44px;flex-shrink:0;}
+.ap-timer-ring svg{transform:rotate(-90deg);}
+.ap-t-bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:3.5;}
+.ap-t-fg{fill:none;stroke-width:3.5;stroke-linecap:round;
+  transition:stroke-dashoffset 1s linear,stroke .4s;}
+#apTnum{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;font-family:'Orbitron',monospace;font-size:12px;
+  font-weight:700;color:#fff;}
+
+.ap-qtext{font-family:'Exo 2',sans-serif;font-size:clamp(15px,2.6vw,18px);
+  font-weight:600;color:#dcefff;line-height:1.55;margin-bottom:14px;}
+.ap-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ap-opt{display:flex;align-items:flex-start;gap:9px;padding:11px 14px;
+  border-radius:8px;border:1px solid rgba(0,180,255,.18);
+  background:rgba(0,180,255,.04);cursor:pointer;
+  font-family:'Exo 2',sans-serif;font-size:clamp(13px,2vw,15px);
+  font-weight:600;color:#b5d5f5;text-align:left;line-height:1.4;
+  transition:all .18s cubic-bezier(.34,1.56,.64,1);}
+.ap-opt-l{min-width:24px;height:24px;border-radius:4px;flex-shrink:0;
+  background:rgba(0,180,255,.1);border:1px solid rgba(0,180,255,.22);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:900;color:#00ccff;transition:.15s;}
+.ap-opt:hover:not([disabled]){border-color:#00ccff;background:rgba(0,200,255,.09);
+  transform:translateX(3px);}
+.ap-opt:hover .ap-opt-l{background:rgba(0,200,255,.28);}
+.ap-opt.correct{border-color:#3ddc84!important;background:rgba(61,220,132,.09)!important;
+  color:#9fffd0!important;animation:optCorrect .45s ease;}
+.ap-opt.correct .ap-opt-l{background:#3ddc84;color:#000;border-color:#3ddc84;}
+.ap-opt.wrong{border-color:#ff4f4f!important;background:rgba(255,79,79,.08)!important;
+  color:#ffb5b5!important;animation:optWrong .4s ease;}
+.ap-opt.wrong .ap-opt-l{background:#ff4f4f;color:#fff;border-color:#ff4f4f;}
+@keyframes optCorrect{0%{transform:scale(1)}40%{transform:scale(1.025)}100%{transform:scale(1)}}
+@keyframes optWrong{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+.ap-explain{margin-top:10px;padding:10px 13px;border-radius:6px;
+  font-family:'Exo 2',sans-serif;font-size:13px;line-height:1.55;display:none;}
+.ap-explain.ok{display:block;background:rgba(61,220,132,.07);
+  border:1px solid rgba(61,220,132,.2);color:#88efb8;}
+.ap-explain.fail{display:block;background:rgba(255,79,79,.06);
+  border:1px solid rgba(255,79,79,.18);color:#ffb0b0;}
+
+#apContBtn{margin-top:12px;width:100%;padding:12px;
+  font-family:'Orbitron',monospace;font-size:10px;letter-spacing:3px;
+  border:1px solid rgba(0,180,255,.3);background:rgba(0,180,255,.07);
+  color:#00ccff;border-radius:6px;cursor:pointer;display:none;
+  transition:.2s;pointer-events:all;}
+#apContBtn:hover{background:rgba(0,200,255,.16);}
+#apContBtn.show{display:block;}
+
+/* warp / landing animation */
+#warpOv{position:fixed;inset:0;z-index:45;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  opacity:0;background:transparent;}
+#warpOv.active{animation:warpFull 2.8s ease-in-out forwards;}
+@keyframes warpFull{
+  0%  {opacity:0;background:transparent;}
+  18% {opacity:1;background:radial-gradient(ellipse at center,rgba(180,220,255,.12) 0%,transparent 70%);}
+  42% {opacity:1;background:radial-gradient(ellipse at center,rgba(255,255,255,.22) 0%,rgba(100,180,255,.08) 60%,transparent 100%);}
+  65% {opacity:1;background:radial-gradient(ellipse at center,rgba(255,255,255,.95) 0%,rgba(200,230,255,.6) 40%,transparent 80%);}
+  80% {opacity:1;background:radial-gradient(ellipse at center,rgba(255,255,255,1) 0%,rgba(180,220,255,.8) 50%,transparent 100%);}
+  100%{opacity:0;background:transparent;}
+}
+#warpTitle{font-family:'Orbitron',monospace;font-size:clamp(18px,3.5vw,32px);
+  font-weight:900;letter-spacing:5px;text-align:center;
+  color:#fff;text-shadow:0 0 30px rgba(0,200,255,.9),0 0 60px rgba(0,200,255,.5);
+  opacity:0;}
+#warpOv.active #warpTitle{animation:warpText 2.8s ease-in-out forwards;}
+@keyframes warpText{
+  0%  {opacity:0;transform:scale(.7) translateY(20px);}
+  30% {opacity:0;transform:scale(.8) translateY(10px);}
+  50% {opacity:1;transform:scale(1.05) translateY(0);}
+  75% {opacity:1;transform:scale(1);}
+  100%{opacity:0;transform:scale(1.15);}
+}
+#warpSub{font-family:'Exo 2',sans-serif;font-size:clamp(12px,2vw,18px);
+  letter-spacing:3px;color:rgba(0,220,255,.8);margin-top:8px;
+  opacity:0;}
+#warpOv.active #warpSub{animation:warpSubAnim 2.8s ease-in-out forwards;}
+@keyframes warpSubAnim{
+  0%,35%{opacity:0;}55%{opacity:.9;}80%{opacity:.9;}100%{opacity:0;}
+}
+/* speed lines canvas */
+#warpCanvas{position:fixed;inset:0;z-index:44;pointer-events:none;opacity:0;}
+#warpCanvas.active{opacity:1;}
+/* orbit landing animation (keep for compat) */
+#orbitAnim{display:none;}
+
+/* overlays */
+.ov{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:24px;text-align:center;
+  background:radial-gradient(ellipse at 50% 38%,rgba(3,0,24,.98),rgba(0,0,3,1));}
+.ov.hidden{display:none;}
+.ov-logo{font-family:'Orbitron',monospace;font-size:clamp(36px,7vw,72px);
+  font-weight:900;letter-spacing:4px;line-height:1.05;margin-bottom:6px;
+  background:linear-gradient(135deg,#00f5ff 0%,#7744ff 45%,#ff79c6 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:logoPulse 3s ease-in-out infinite;}
+@keyframes logoPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4) drop-shadow(0 0 20px rgba(0,200,255,.4))}}
+.ov-sub{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:5px;
+  color:rgba(0,180,255,.4);margin-bottom:40px;}
+.ov-desc{max-width:500px;font-family:'Exo 2',sans-serif;font-size:15px;
+  line-height:1.9;color:rgba(170,210,255,.85);margin-bottom:36px;}
+.ov-btn{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:3px;
+  padding:16px 52px;border:1px solid rgba(0,180,255,.45);
+  background:rgba(0,180,255,.08);color:#00ccff;cursor:pointer;border-radius:5px;
+  transition:all .25s;box-shadow:0 0 30px rgba(0,180,255,.1);pointer-events:all;}
+.ov-btn:hover{background:rgba(0,200,255,.2);box-shadow:0 0 50px rgba(0,200,255,.3);
+  transform:translateY(-2px);}
+.ov-stats{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:28px;}
+.ov-st{background:rgba(255,255,255,.03);border:1px solid rgba(0,180,255,.15);
+  border-radius:8px;padding:13px 20px;min-width:95px;}
+.ov-sv{font-family:'Orbitron',monospace;font-size:26px;font-weight:900;
+  color:#00ccff;text-shadow:0 0 12px rgba(0,200,255,.45);}
+.ov-sl{font-family:'Orbitron',monospace;font-size:8px;letter-spacing:2px;
+  color:rgba(0,180,255,.4);margin-top:3px;}
+.ov-hint{font-family:'Exo 2',sans-serif;font-size:12px;
+  color:rgba(255,255,255,.28);margin-top:18px;line-height:1.9;}
+.ov-hint b{color:rgba(0,180,255,.6);}
+
+/* planet visited card - bottom-right */
+#visitCard{position:absolute;bottom:52px;right:18px;max-width:220px;
+  background:rgba(0,5,20,.9);border:1px solid rgba(0,180,255,.18);
+  border-radius:10px;padding:12px 14px;opacity:0;transition:opacity .5s;
+  pointer-events:none;}
+#visitCard.show{opacity:1;}
+.vc-title{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:2px;
+  color:rgba(255,200,80,.7);margin-bottom:6px;}
+.vc-fact{font-family:'Exo 2',sans-serif;font-size:12px;line-height:1.55;
+  color:rgba(200,225,255,.8);font-weight:300;}
+
+/* dmg */
+.dmg-v{position:fixed;inset:0;pointer-events:none;z-index:20;
+  background:radial-gradient(ellipse at center,transparent 35%,rgba(255,0,0,.28) 100%);
+  animation:dmgVig .6s ease-out forwards;}
+@keyframes dmgVig{0%{opacity:1}100%{opacity:0}}
+
+/* float texts */
+.ft{position:fixed;pointer-events:none;z-index:15;
+  font-family:'Orbitron',monospace;font-weight:700;
+  animation:ftRise 1.6s ease-out forwards;}
+@keyframes ftRise{0%{opacity:1;transform:translateY(0) scale(1)}
+  100%{opacity:0;transform:translateY(-100px) scale(1.05)}}
+
+/* mobile */
+#mCtrl{position:fixed;bottom:0;left:0;right:0;z-index:11;
+  display:none;padding:8px 16px 16px;justify-content:space-between;align-items:flex-end;}
+.mc-b{border-radius:50%;border:2px solid rgba(0,180,255,.3);
+  background:rgba(0,180,255,.06);color:rgba(0,180,255,.75);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:18px;-webkit-tap-highlight-color:transparent;user-select:none;
+  pointer-events:all;}
+
+@media(max-width:560px){.ap-opts{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="stats">
+    <div class="stat-row">
+      <span class="stat-icon">🛡</span>
+      <span class="stat-label">ՎԱՀԱՆ</span>
+      <div class="stat-bar"><div class="stat-fill" id="shFill" style="width:100%"></div></div>
+      <span class="stat-num" id="shNum">100</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-icon">⚡</span>
+      <span class="stat-label">ՎԱՌԵԼԻՔ</span>
+      <div class="stat-bar"><div class="stat-fill" id="fuFill" style="width:100%"></div></div>
+      <span class="stat-num" id="fuNum">100</span>
+    </div>
+  </div>
+
+  <div id="topcenter">
+    <div id="scoreLbl">ՀԵՏԱԽՈՒՅԶԻ ՄԻԱՎՈՐՆԵՐ</div>
+    <div id="scoreNum">000000</div>
+    <div id="destRow">
+      <span id="destLbl">ՈՒՂՂՈՒԹՅՈՒՆ՝</span>
+      <span id="destName">MERKURI</span>
+    </div>
+  </div>
+
+  <div id="topright">
+    <div id="livesRow"></div>
+    <div id="comboBox">✦ COMBO ×<span id="comboNum">2</span></div>
+    <div id="killCount">աստերոիդներ՝ 0</div>
+  </div>
+
+  <div id="solarMap"></div>
+  <div id="factBubble"><div class="fb-tag" id="fbTag">ՏԻԵԶԵՐՔԻ ՓԱՍՏ</div><div class="fb-text" id="fbText"></div></div>
+  <div id="visitCard"><div class="vc-title" id="vcTitle">ՄՈԼՈՐԱԿՆ ՈՒՍՈՒՄՆԱՍԻՐՎԱԾ Է</div><div class="vc-fact" id="vcFact"></div></div>
+</div>
+
+<!-- Approach / Question panel -->
+<div id="approachPanel">
+  <div class="ap-header">
+    <div class="ap-planet-icon" id="apIcon">🪐</div>
+    <div class="ap-info">
+      <div class="ap-planet-name" id="apName">Մոլորակ</div>
+      <div class="ap-planet-sub" id="apSub">Մուտք գործի ուղեծիր</div>
+    </div>
+    <div class="ap-timer-ring">
+      <svg width="44" height="44" viewBox="0 0 44 44">
+        <circle class="ap-t-bg" cx="22" cy="22" r="18"/>
+        <circle class="ap-t-fg" id="apTring" cx="22" cy="22" r="18"
+          stroke="#00ccff" stroke-dasharray="113.1" stroke-dashoffset="0"/>
+      </svg>
+      <div id="apTnum">25</div>
+    </div>
+  </div>
+  <div class="ap-qtext" id="apQtext">...</div>
+  <div class="ap-opts" id="apOpts"></div>
+  <div class="ap-explain" id="apExplain"></div>
+  <button id="apContBtn">Շարունակել ▶</button>
+</div>
+
+<!-- Orbit animation -->
+<canvas id="warpCanvas"></canvas>
+<div id="warpOv">
+  <div id="warpTitle">ՄՏՆՈՒՄ ԵՆՔ ՈՒՂԵԾԻՐ</div>
+  <div id="warpSub">ՀԱՄԱԿԱՐԳԵՐԸ ՆՈՐՄԱԼ ԵՆ</div>
+</div>
+<div id="orbitAnim" style="display:none"><div id="orbitText"></div></div>
+
+<!-- INTRO -->
+<div class="ov" id="introOv">
+  <div class="ov-logo">COSMIC<br>EXPLORER</div>
+  <div class="ov-sub">◈ ՏԻԵԶԵՐՔԻ ՀԵՏԱԽՈՒՅԶ ◈</div>
+  <div class="ov-desc">
+    Թռիր ամբողջ Արեգակնային համակարգով՝ Մերկուրիից մինչև Նեպտուն։<br>
+    Յուրաքանչյուր մոլորակ կբացահայտի իր <b style="color:#ffd700">գաղտնիքները</b> և հարց կտա։<br>
+    Ոչնչացրու աստերոիդները, հավաքիր բոնուսներ, ուսումնասիրիր տիեզերքը!<br><br>
+    <span style="color:rgba(0,180,255,.55);font-size:13px;">🪐 8 մոլորակ · 40+ հարց տիեզերքի մասին · փաստեր իրական ժամանակում</span>
+  </div>
+  <button class="ov-btn" id="startBtn">🚀 ՍԿՍԵԼ ԹՌԻՉՔԸ</button>
+  <div class="ov-hint"><b>← →</b> պտտում · <b>↑</b> քարշ · <b>ԲԱՑԱՏ</b> krayk · <b>1–4</b> պատասխան</div>
+</div>
+
+<!-- END -->
+<div class="ov hidden" id="endOv">
+  <div class="ov-logo" id="endLogo" style="font-size:clamp(28px,5vw,52px)">ԱՌԱՔԵԼՈՒԹՅՈՒՆ</div>
+  <div class="ov-sub" id="endSub">АВАРТВЕЛ Е</div>
+  <div class="ov-stats" id="endStats"></div>
+  <button class="ov-btn" id="restartBtn">↺ ՆՈՐ ԱՌԱՔԵԼՈՒԹՅՈՒՆ</button>
+</div>
+
+<!-- Mobile -->
+<div id="mCtrl">
+  <div style="display:flex;gap:9px;">
+    <button class="mc-b" id="mL" style="width:54px;height:54px">◀</button>
+    <button class="mc-b" id="mR" style="width:54px;height:54px">▶</button>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:7px;align-items:center;">
+    <button class="mc-b" id="mF" style="width:50px;height:50px;border-color:rgba(255,100,100,.35);color:rgba(255,120,120,.7);">⚡</button>
+    <button class="mc-b" id="mT" style="width:64px;height:64px;">▲</button>
+  </div>
+</div>
+
+<canvas id="c"></canvas>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════
+// CURSOR
+// ═══════════════════════════════
+const cursorEl = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursorEl.style.left = e.clientX + 'px';
+  cursorEl.style.top = e.clientY + 'px';
+});
+
+// ═══════════════════════════════
+// CANVAS
+// ═══════════════════════════════
+const CV = document.getElementById('c');
+const cx = CV.getContext('2d');
+let W, H;
+function resize(){ W = CV.width = window.innerWidth; H = CV.height = window.innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+// ═══════════════════════════════
+// SOLAR SYSTEM DATA
+// ═══════════════════════════════
+const PLANETS = [
+  {
+    name:'Մerкuri', emoji:'☿', col:'#b5a090', glow:'#c8b8a0', r:22,
+    facts:[
+      'Мerкurin Аregaknayin hamakargis amenapokr molarakn e. Tramaguizy 4 879 km e.',
+      'Мerкurii tarin undameny 88 erkrayin or e — Аregaknayin hamakargum amenakarchn!',
+      'Мerкurii jermastijany: +430°C cegerekoy ev −180°C gisheroy. Hskayakan tatanum!',
+      'Мerкurii vra mthnolort chka — ayn аregayin qamin el e mlyarddavov tari аraj.',
+    ],
+    questions:[
+      {q:'Քanі՞ erkrayin or e Мerкurii tarin:',
+       a:['88','365','225','687'],r:0,
+       e:'Мerкurin Аregaki shurj pttvum e 88 orum — amenakarchn Аregaknayin hamakargum! ☿'},
+      {q:'Vo՞rn e Мerкurii makerevuyti аravelaguyn jermastijann:',
+       a:['+100°C','+250°C','+430°C','+600°C'],r:2,
+       e:'+430°C lusavor koghmum! Gishery −180°C — hskayakan tatanum antes mthnolort 🌡️'},
+      {q:'Incho՞u Мerкurii vra mthnolort chka:',
+       a:['Shat curt e','Аrevayin qamin phchel e','Hoghn e klanel','Bek chi eghel'],r:1,
+       e:'Аrevayin qamin phchec Мerкurii мthnolort — thuyl gravitacian chpahecec ayn ☀️'},
+    ]
+  },
+  {
+    name:'Վenerа', emoji:'♀', col:'#e8c060', glow:'#ffdd80', r:30,
+    facts:[
+      'Վenerаn аmenаtаk molarakn e. +462°C miccin jermastijan. Аveli tak, qan Мerкurin!',
+      'Վenerаyi orn аveli erkar e qan nra tarin. Pttvum e shat dandaght — 243 erkrayin or.',
+      'Վenerаn hakarak ughthutyамб e pttvum — аynt Аregаkn аrevmuticic e cаgum!',
+      'Վenerаyi makerevuyt chnshumn Erkrаyinics 90 аngаm mets e — karcel 900 m dziuc.',
+    ],
+    questions:[
+      {q:'Vor molarakn e аmenаtak Аregаknayin hаmаkаrgum:',
+       a:['Мerкuri','Վenerа','Маrs','Yuрiter'],r:1,
+       e:'Վenerаn! +462°C miccin. CO₂-i khit мthnolort jermocayin efект stegcum e 🌋'},
+      {q:'Inch ughthutyамб e pttvum Վenerаn (erkric targber):',
+       a:['Nuyn kerp','Hakarak','Chi pttvum','Tarber kerp'],r:1,
+       e:'Վenerаyi vrа Аregаkn аrevmuticic e cаgum — hakarak ptуyt ♀'},
+      {q:'Qani аngаm e Վenerаyi mak. chnshumn аveli mets erkrаynic:',
+       a:['10','45','90','200'],r:2,
+       e:'90 аngаm! Inchpes 900 м khorutyan erkrаyin ovkiаnosum. Sarsapheli tegh! 💀'},
+    ]
+  },
+  {
+    name:'Erkir', emoji:'🌍', col:'#3080c0', glow:'#60aaff', r:32,
+    facts:[
+      'Erkiry miyak haytni kyanqov molarakn e. Makerevuyti 71%-y jur e.',
+      'Erkirn uni magnisakan dasht — аyn pahpаnum e mez mаhaber аregаyin qamic.',
+      'Erkiry kataryal gund chi — bevnerum mi peu hartacvac e pttutyan parichaov.',
+      'Lusiny Erkric heranum e tarekan 3.8 sm — mateneguner aucci pes.',
+    ],
+    questions:[
+      {q:'Erkri makerevuyti qani tokosn e jur:',
+       a:['51%','61%','71%','81%'],r:2,
+       e:'71% — henkz drа Erkiry tiezerqics kapuyt e yerevoum 🌊'},
+      {q:'Inchn e pashtpanum Erkirn аregаyin qamuc:',
+       a:['Mthnolort','Ozoni shert','Magnisakan dasht','Lusin'],r:2,
+       e:'Erkri magnisakan dashtn аregаyin qami licqav masnikner e shegum 🧲'},
+      {q:'Inch araguthyамб e Lusinn herаnum Erkric:',
+       a:['1 мм/t','3.8 cm/t','10 cm/t','1 m/t'],r:1,
+       e:'3.8 cm/t — inchpes mateneguner aucc! Lusni lazer andradarcichnerov chapvel e 🌙'},
+    ]
+  },
+  {
+    name:'Маrs', emoji:'♂', col:'#cc5522', glow:'#ff7744', r:26,
+    facts:[
+      'Маrsi vra gtkvum e Olymp — Аregаknayin hаmаkаrgis аmenаbаrjr hrаbuxn. 21.9 km!',
+      'Маrsi orn 24 jаm 37 rope e — grete inchpes erkrаyinn.',
+      'Маrsi мthnolort 95%-ov CO₂ e. Аynt shnchelel hnаrаvor chi.',
+      'Kаrmiru guynn Маrsin tаlis en erkаti oksidnery — bаcаrаbаr zhаng mаkerevuytum.',
+    ],
+    questions:[
+      {q:'Vorn e Маrsi Olymp lerran bardruthyunn:',
+       a:['8.8 km','14 km','21.9 km','35 km'],r:2,
+       e:'Olymp — 21.9 km! Grete 2.5 аngаm аveli barjr qan Everest. Аregаknayin hаmаkаrgis аmenаmets hrаbuxn ♂'},
+      {q:'Inch e himnakinums kazmum Маrsi мthnolort:',
+       a:['Azot','Ttvacin','CO₂','Metan'],r:2,
+       e:'95% CO₂. Henkz drа аynt shnchelel hnаrаvor chi ev shat curt e 🌡️'},
+      {q:'Inchoun e karmir Маrsn:',
+       a:['Tak lava','Erkati oksidner (zhang)','Karmir jrimur','Hatuk luys'],r:1,
+       e:'Zhang! Erkati oksidnery tsatskum en makerevuytn — bnorosh karmir guyn talov 🔴'},
+    ]
+  },
+  {
+    name:'Yuрiter', emoji:'♃', col:'#c89060', glow:'#e8b888', r:55,
+    facts:[
+      'Yuрitern аmenаmets molarakn e. Nrаn mej kteghavoorvein 1321 Erkir!',
+      'Мets Kаrmir Bity — Yuрiteri vrа buri, vor аveli qаn 350 tari e buxum.',
+      'Yuрitern uni 95 hаytni аrbаnyаk — аmbogh mi mini-аregаknayin hаmаkаrg!',
+      'Yuрitern gаzаyin hskа e. Nа hаstаtik mаkerevuyt chunni, mаyn gаz ev heghuk.',
+    ],
+    questions:[
+      {q:'Qani Erkir kteghavoorveyi Yuрiteri mej:',
+       a:['130','500','1321','5000'],r:2,
+       e:'1321 Erkir! Yuрitern iskаkаn hskа e, Erkric 318 аngаm tsаnr ♃'},
+      {q:'Qani tаri Yuрiteri Мets Kаrmir Bity buxum e:',
+       a:['50','100','200','350+'],r:3,
+       e:'350 tаrits аveli! Аyn Erkric mets hаkаciklon e 🌀'},
+      {q:'Qani hаytni аrbаnyаk uni Yuрitern:',
+       a:['4','27','63','95'],r:3,
+       e:'95 аrbаnyаk! Аmenаmetsern — Io, Еvropа, Gаniмed, Kаllisto 🌙'},
+    ]
+  },
+  {
+    name:'Sаturn', emoji:'🪐', col:'#d4b870', glow:'#eedd90', r:50,
+    facts:[
+      'Sаturni oghаknery kаzmvum en sаrruycic ev kаrerics — hаstuthyunn undаmeny 10-100 м!',
+      'Sаturn аynqаn tetel e (khtuthyunn jorics pokr), vor teoreticoren klogar.',
+      'Sаturni vrа qаminer hаsnum en mincheV 1800 km/j — 5 аngаm аveli аrаg qаn Erkri purjik.',
+      'Sаturni аrbаnyаk Titаnn uni khit мthnolort ev heghuk metаni lcher.',
+    ],
+    questions:[
+      {q:'Inch kazmvum en Saturni oghaknerн:',
+       a:['Phoshi u gаz','Sаrruyts u kаrer','Metаgh','Heghuk'],r:1,
+       e:'Sаrruyts u kаre bekorr! Oghаkneri hаstuthyunn undаmeny 10-100 м, bаyts lаynutyunn hаzаr km 🪐'},
+      {q:'Saturni khtuthyunn jri hamаr:',
+       a:['10 аngаm mets','3 аngаm mets','Hаvаsаr','Jorics pokr'],r:3,
+       e:'Jorics pokr! Pаtаchаr аvаzаni okeаns liner, Sаturnin klоgаr 🛁'},
+      {q:'Saturni vorn аrbаnyаkin vrа kаn heghuk metаni lcher:',
+       a:['Еnkelаdus','Mimаs','Titаn','Reа'],r:2,
+       e:'Titаn! Uni khit мthnolort u heghuk metаni lcher — ezаkаn аshkhаr 🌫️'},
+    ]
+  },
+  {
+    name:'Urаn', emoji:'⛢', col:'#80d8e8', glow:'#a0eeff', r:38,
+    facts:[
+      'Urаnn koghki vrа e pttum — аxjn 98° thekel e ujeghrri nkаtmамb.',
+      'Urаni bevery аveli shаt аregаyin jermutуun en stаnum qаn hаsаrаkаcn.',
+      'Urаni vrа jmer 21 erkrаyin tаri e tevum — bevery аmbox аyd jаmаnаkum Аregаk chi tesnum.',
+      'Urаnn sаrcheghаyin hskа e. Nrа mаntiаn jric, аmoniаkic ev metаnic kаzmvаd khаrruyd e.',
+    ],
+    questions:[
+      {q:'Qani аstijhаn e thekvum Urаni pttutoy аxjn:',
+       a:['23°','45°','78°','98°'],r:3,
+       e:'98°! Urаnn koghkin vrа kotrvoum e ujeghrrov. Hаvаnаkаn bаkhkvec plаnetoidi het ⛢'},
+      {q:'Qani erkrаyin tаri e Urаni bevrum jmern:',
+       a:['5','11','21','42'],r:2,
+       e:'21 tаr! Bevery аmbox аyd jаmаnаkum tаmkutyan mej e — iskаkаn bevаrаyin gisher 🌑'},
+      {q:'Urаnn e:',
+       a:['Gаzаyin hskа','Sаrcheghаyin hskа','Kаmnаyin molаrаk','Gncik molаrаk'],r:1,
+       e:'Sаrcheghаyin hskа! Jur, аmoniаk ev metаn mаntiаyum ekzotik pаtjаnаkner stegcum en 💎'},
+    ]
+  },
+  {
+    name:'Nеptun', emoji:'♆', col:'#2244cc', glow:'#4466ff', r:36,
+    facts:[
+      'Nеptuni vrа Аregаknayin hаmаkаrgis аmenаuzheg qаminern en — mincheV 2100 km/j!',
+      'Nеptunн 1846-in bаcаkhаytvec mаtemаtikoren, Urаni ujeghrri shаhumennerov.',
+      'Мets Темn Bityn — Nеptuni vrа Erkri chаfov hаkаciklon e.',
+      'Nеptuni аrbаnyаk Tritonn hаkаrаk ughthutyамб e pttvum — hаvаnаkаn Koyperi gotic grаvvаc mаrmin e.',
+    ],
+    questions:[
+      {q:'Neptuni vra qami аraguthyunn hasnum e:',
+       a:['400 km/j','800 km/j','1500 km/j','2100 km/j'],r:3,
+       e:'2100 km/j — Аregаknayin hаmаkаrgum аmenаuzheg qаminer! 1.7 xnjаjni аraguthyun e ♆'},
+      {q:'Inch pes Neptun 1846-in bacakhaytvec:',
+       a:['Teleskopov patahakan','Matematikoren, Urani ujegov','Lusnankare','Radioaliqnerov'],r:1,
+       e:'Leverye ev Аdams hashvarkerin nra deghy Urani ujeghrri shahumennerov — matematikai haght! 📐'},
+      {q:'Inch e kochvum Neptuni amenamets arbanyakn hakarak pttutov:',
+       a:['Protej','Nereida','Triton','Larissa'],r:2,
+       e:'Triton pttvum e molaraki yntackin dem — havanakan, gravvats e Koyperi gotekov 🌊'},
+    ]
+  },
+];
+
+// Extra space facts
+
+// Extra space facts
+
+// Extra space facts for mid-flight display
+const SPACE_FACTS = [
+  {tag:'ՍԵՎHOLES', icon:'🕳', text:'Երкрайин saev خоره Erkric — Gaia BH1, 1560 luisatari heravut. menj mas.'},
+  {tag:'ԱՐԵԳԱԿ', icon:'☀', text:'Aregaky kаzmum e Aregaknain hamakargis ampboğj xnjujyan 99.86%-y.'},
+  {tag:'АΣΤGHER', icon:'⭐', text:'Hamaikumum avelsh astgher kan, kan Erkri ambogj lyajerum avisakneri kanik.'},
+  {tag:'LUYС', icon:'💡', text:'Aregakits Erkir хеnox luysy 8 rope 20 vayrkyan tarаcnums.'},
+  {tag:'HAMAIK', icon:'🌌', text:'Hamaikumy mоt 13.8 milyard tari e.'},
+  {tag:'ՏԿԿ', icon:'🛸', text:'ТКК shаrjvum e 7.66 кm/vyrkyan arjaguthyan ev Erkri shurj 15.5 shrjпт e кataretsnum ork.'},
+  {tag:'KOJPERI GOTY', icon:'❄', text:'За орбитой Նեպտունа находится пояс Койпера — регион из льда и камней, родина комет.'},
+  {tag:'MРАЧНА NIWT', icon:'👾', text:'Видимая материя составляет лишь 5% Вселенной. Остальное — тёмная материя и тёмная энергия.'},
+  {tag:'NEJTRONAJIN АSТGNER', icon:'💫', text:'Moskvay чаfov nejtronajin астgik unenk xntjutyun, vor gerzum e Aregaki xnjujyunits.'},
+  {tag:'АSTEROJDNER', icon:'🪨', text:'В поясе астероидов между Մարսом и Յուպիտերом — миллионы объектов, но суммарная масса меньше Луны.'},
+  {tag:'КOMETА', icon:'☄', text:'Кometayi barine мishт uĝĝarvаd e Aregakits — ayn areg. qamin e tanim.'},
+  {tag:'КARMIR SРЖISHMENT', icon:'🔴', text:'Наmаikumы lаyаnanum e. hеru galaктikaneгi luyse sржvum e spektri karmir maheri.'},
+];
+
+function shuffle(a){ return [...a].sort(()=>Math.random()-.5); }
+
+// ═══════════════════════════════
+// BACKGROUND OBJECTS
+// ═══════════════════════════════
+let STARS=[], NEBS=[];
+function initBg(){
+  STARS=[];
+  for(let i=0;i<280;i++) STARS.push({
+    x:Math.random()*W*2.2-W*.1, y:Math.random()*H*2.2-H*.1,
+    s:Math.random()*2.2+.25, op:Math.random()*.8+.18,
+    tw:Math.random()*Math.PI*2, ts:Math.random()*.035+.007,
+    hue:200+Math.random()*60-30,
+    isBright:Math.random()>.85,
+  });
+  NEBS=[];
+  for(let i=0;i<6;i++) NEBS.push({
+    x:Math.random()*W, y:Math.random()*H,
+    r:130+Math.random()*200, hue:Math.random()*360,
+    op:.018+Math.random()*.025,
+  });
+}
+window.addEventListener('resize',initBg);
+
+// ═══════════════════════════════
+// GAME STATE
+// ═══════════════════════════════
+let GS = null; // game state
+let OB = null; // objects
+
+function newGame(){
+  GS = {
+    // ship
+    x:W/2, y:H/2, angle:-Math.PI/2,
+    vx:0, vy:0, thrusting:false,
+    invTimer:0, shootCool:0,
+    // progress
+    score:0, lives:3, shield:100, fuel:100,
+    combo:1, comboTimer:0,
+    kills:0,
+    // planets
+    planetIdx:0, // 0=Mercury, 7=Neptune
+    planetVisited:[],
+    // questions
+    qPool:[], qIdx:0, qOpen:false, qAnswered:false,
+    activePlanet:null,
+    totalQ:0, correctQ:0,
+    // facts
+    factTimer:0, factInterval:520,
+    factQueue:shuffle(SPACE_FACTS),
+    factQIdx:0,
+    // state
+    running:false,
+    orbitTimer:0,
+  };
+  OB = {
+    bullets:[], asteroids:[], particles:[],
+    pickups:[], floats:[],
+    targetPlanet:null,
+    asteroidTimer:0,
+  };
+
+  // build question pool for current planet
+  rebuildQPool();
+  initBg();
+  for(let i=0;i<6;i++) spawnAsteroid(true);
+  spawnTargetPlanet();
+  buildSolarMap();
+  updateLivesUI();
+  updateHUD();
+  document.getElementById('comboBox').style.opacity='0';
+  hideFact();
+}
+
+function rebuildQPool(){
+  const p=PLANETS[GS.planetIdx];
+  GS.qPool=shuffle(p.questions);
+  GS.qIdx=0;
+}
+
+function spawnTargetPlanet(){
+  if(OB.targetPlanet) return;
+  const pd=PLANETS[GS.planetIdx];
+  // Spawn from a RANDOM screen edge, ensuring distance from ship
+  const shipX=GS?GS.x:W/2, shipY=GS?GS.y:H/2;
+  const margin=pd.r+50;
+  let tx,ty,attempts=0;
+  do{
+    const edge=Math.floor(Math.random()*4);
+    if(edge===0){ tx=margin+Math.random()*(W-margin*2); ty=margin+Math.random()*80; }
+    else if(edge===1){ tx=W-margin-Math.random()*80; ty=margin+Math.random()*(H-margin*2); }
+    else if(edge===2){ tx=margin+Math.random()*(W-margin*2); ty=H-margin-Math.random()*80; }
+    else { tx=margin+Math.random()*80; ty=margin+Math.random()*(H-margin*2); }
+    attempts++;
+  } while(Math.hypot(tx-shipX,ty-shipY)<pd.r+220 && attempts<12);
+
+  OB.targetPlanet={
+    x:tx, y:ty,
+    r:pd.r, col:pd.col, glow:pd.glow,
+    name:pd.name, emoji:pd.emoji,
+    rot:Math.random()*Math.PI*2,
+    rs:.003+Math.random()*.004,
+    approached:false, alive:true,
+    rings: GS.planetIdx===5||GS.planetIdx===6||GS.planetIdx===7,
+    ringTilt:.2+Math.random()*.7,
+    scale:0.01,
+    warpAlpha:1.0,  // warp beam fade-in
+    warpAngle:Math.random()*Math.PI*2,
+    pulse:0,
+  };
+  document.getElementById('destName').textContent=pd.name;
+}
+
+// ═══════════════════════════════
+// SPAWN
+// ═══════════════════════════════
+function edgePos(margin=90){
+  const e=Math.floor(Math.random()*4);
+  if(e===0) return {x:Math.random()*W,y:-margin};
+  if(e===1) return {x:W+margin,y:Math.random()*H};
+  if(e===2) return {x:Math.random()*W,y:H+margin};
+  return {x:-margin,y:Math.random()*H};
+}
+
+function spawnAsteroid(safe=false){
+  let x,y;
+  if(safe){
+    do{x=Math.random()*W;y=Math.random()*H;}
+    while(GS&&Math.hypot(x-GS.x,y-GS.y)<240);
+  } else ({x,y}=edgePos());
+  const level=GS?GS.planetIdx:0;
+  const sz=24+Math.random()*40+level*3;
+  const spd=.45+Math.random()*.85+level*.08;
+  const ang=Math.random()*Math.PI*2;
+  const hp=Math.max(1,Math.floor(sz/20));
+  const verts=7+Math.floor(Math.random()*5);
+  const pts=[];
+  for(let i=0;i<verts;i++){
+    const a=(Math.PI*2/verts)*i+(Math.random()-.5)*.5;
+    pts.push({x:Math.cos(a)*sz*(.58+Math.random()*.52),
+              y:Math.sin(a)*sz*(.58+Math.random()*.52)});
+  }
+  OB.asteroids.push({x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,
+    rot:Math.random()*Math.PI*2,rs:(Math.random()-.5)*.025,sz,pts,hp,maxHp:hp});
+}
+
+function spawnPickup(x,y){
+  const t=Math.random()<.55?'fuel':'shield';
+  OB.pickups.push({x,y,vy:-1.1,life:1,decay:.0035,angle:0,
+    type:t,col:t==='fuel'?'#ffd700':'#00d4ff'});
+}
+
+function spawnParticles(x,y,col,n=14,spd=3.5){
+  for(let i=0;i<n;i++){
+    const a=(Math.PI*2/n)*i+Math.random()*.6;
+    OB.particles.push({x,y,
+      vx:Math.cos(a)*spd*(.45+Math.random()),
+      vy:Math.sin(a)*spd*(.45+Math.random()),
+      col,life:1,decay:.02+Math.random()*.018,sz:1.6+Math.random()*2.8});
+  }
+}
+
+function addFloat(x,y,txt,col='#ffd700',sz=20){
+  OB.floats.push({x,y,txt,col,sz,life:1,decay:.015,vy:-1.2});
+}
+
+// ═══════════════════════════════
+// SOLAR MAP UI
+// ═══════════════════════════════
+function buildSolarMap(){
+  const el=document.getElementById('solarMap'); el.innerHTML='';
+  PLANETS.forEach((p,i)=>{
+    if(i>0){
+      const line=document.createElement('div');
+      line.className='sm-line'+(i<=GS.planetIdx?' done':'');
+      el.appendChild(line);
+    }
+    const node=document.createElement('div'); node.className='sm-node';
+    const dot=document.createElement('div');
+    const sz=i===4?26:i===5?24:18;
+    dot.style.cssText=`width:${sz}px;height:${sz}px;background:${p.col}22;`;
+    let cls='sm-dot ';
+    if(GS.planetVisited.includes(i)) cls+='done';
+    else if(i===GS.planetIdx) cls+='current';
+    else cls+='locked';
+    dot.className=cls;
+    dot.textContent=p.emoji;
+    const lbl=document.createElement('div'); lbl.className='sm-name'; lbl.textContent=p.name.slice(0,3);
+    if(i===GS.planetIdx) lbl.style.color='#ffd700';
+    node.appendChild(dot); node.appendChild(lbl);
+    el.appendChild(node);
+  });
+}
+
+// ═══════════════════════════════
+// FACT SYSTEM
+// ═══════════════════════════════
+let factShowTimer=0;
+function showFact(f){
+  const el=document.getElementById('factBubble');
+  document.getElementById('fbTag').textContent=f.tag;
+  document.getElementById('fbText').innerHTML=`<span class="fb-icon">${f.icon}</span>${f.text}`;
+  // random position, avoid edges
+  const mx=Math.min(W-310,Math.max(10,GS.x+(Math.random()-.5)*180));
+  const my=Math.min(H-140,Math.max(80,GS.y-80-Math.random()*60));
+  el.style.left=mx+'px'; el.style.top=my+'px';
+  el.classList.add('show');
+  factShowTimer=240;
+}
+function hideFact(){ document.getElementById('factBubble').classList.remove('show'); }
+
+// ═══════════════════════════════
+// PLANET VISIT CARD
+// ═══════════════════════════════
+let visitCardTimer=0;
+function showVisitCard(pd,correct){
+  const el=document.getElementById('visitCard');
+  document.getElementById('vcTitle').textContent=correct?'✅ '+pd.name+' USUMNASIRVEL E':'❌ '+pd.name+' — կվերադառնանք!';
+  document.getElementById('vcFact').textContent=pd.facts[Math.floor(Math.random()*pd.facts.length)];
+  el.classList.add('show');
+  visitCardTimer=300;
+}
+
+// ═══════════════════════════════
+// DRAW
+// ═══════════════════════════════
+function drawBg(){
+  const g=cx.createRadialGradient(W*.42,H*.35,0,W*.5,H*.5,Math.max(W,H)*.9);
+  g.addColorStop(0,'#060025'); g.addColorStop(.4,'#020012'); g.addColorStop(1,'#000008');
+  cx.fillStyle=g; cx.fillRect(0,0,W,H);
+  NEBS.forEach(n=>{
+    const ng=cx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r);
+    ng.addColorStop(0,`hsla(${n.hue},70%,55%,${n.op})`); ng.addColorStop(1,'transparent');
+    cx.fillStyle=ng; cx.beginPath(); cx.arc(n.x,n.y,n.r,0,Math.PI*2); cx.fill();
+  });
+}
+
+function scrollBg(dvx,dvy){
+  const dx=dvx*.13,dy=dvy*.13;
+  STARS.forEach(s=>{
+    s.x-=dx; s.y-=dy;
+    if(s.x<-60)s.x+=W*2.4; if(s.x>W*2.2)s.x-=W*2.4;
+    if(s.y<-60)s.y+=H*2.4; if(s.y>H*2.2)s.y-=H*2.4;
+  });
+  NEBS.forEach(n=>{
+    n.x-=dx*.4; n.y-=dy*.4;
+    if(n.x<-n.r)n.x+=W+n.r*2; if(n.x>W+n.r)n.x-=W+n.r*2;
+    if(n.y<-n.r)n.y+=H+n.r*2; if(n.y>H+n.r)n.y-=H+n.r*2;
+  });
+}
+
+function drawStars(){
+  STARS.forEach(s=>{
+    s.tw+=s.ts;
+    const op=s.op*(.6+Math.sin(s.tw)*.4);
+    cx.beginPath(); cx.arc(s.x,s.y,s.s,0,Math.PI*2);
+    cx.fillStyle=`hsla(${s.hue},75%,92%,${op})`; cx.fill();
+    if(s.isBright){
+      cx.shadowColor=`hsl(${s.hue},100%,95%)`; cx.shadowBlur=6;
+      cx.fill(); cx.shadowBlur=0;
+      // cross gleam
+      cx.strokeStyle=`hsla(${s.hue},90%,95%,${op*.4})`;
+      cx.lineWidth=.6;
+      cx.beginPath(); cx.moveTo(s.x-s.s*2.5,s.y); cx.lineTo(s.x+s.s*2.5,s.y); cx.stroke();
+      cx.beginPath(); cx.moveTo(s.x,s.y-s.s*2.5); cx.lineTo(s.x,s.y+s.s*2.5); cx.stroke();
+    }
+  });
+}
+
+function drawPlanet(p){
+  cx.save(); cx.translate(p.x,p.y);
+  const sc=p.scale||1; cx.scale(sc,sc);
+  cx.rotate(p.rot);
+
+  // far atmosphere
+  const fa=cx.createRadialGradient(0,0,p.r*.7,0,0,p.r*1.7);
+  {const _n2=parseInt(p.glow.replace('#',''),16),_r2=(_n2>>16)&255,_g2=(_n2>>8)&255,_b2=_n2&255;
+  fa.addColorStop(0,`rgba(${_r2},${_g2},${_b2},.12)`); fa.addColorStop(1,'transparent');}
+  cx.beginPath(); cx.arc(0,0,p.r*1.7,0,Math.PI*2); cx.fillStyle=fa; cx.fill();
+
+  // rings (behind)
+  if(p.rings){
+    cx.save(); cx.scale(1,Math.sin(p.ringTilt)*.4+.08);
+    cx.beginPath(); cx.arc(0,0,p.r*2.2,0,Math.PI*2);
+    const rg=cx.createConicalGradient?undefined:undefined; // fallback
+    cx.strokeStyle=p.col+'66'; cx.lineWidth=p.r*.3; cx.stroke();
+    // ring segments
+    for(let ri=0;ri<3;ri++){
+      cx.beginPath(); cx.arc(0,0,p.r*(1.5+ri*.25),0,Math.PI*2);
+      cx.strokeStyle=p.col+(ri===1?'55':'33'); cx.lineWidth=p.r*.08; cx.stroke();
+    }
+    cx.restore();
+  }
+
+  // warp entry beam (fades out as planet appears)
+  if(p.warpAlpha>0){
+    const beamLen=Math.max(W,H)*1.1;
+    const wa=p.warpAlpha;
+    for(let bi=0;bi<3;bi++){
+      const ba=p.warpAngle+bi*Math.PI*.22*(bi%2?1:-1);
+      const bg=cx.createLinearGradient(
+        Math.cos(ba)*p.r, Math.sin(ba)*p.r,
+        Math.cos(ba)*beamLen, Math.sin(ba)*beamLen
+      );
+      // parse p.glow hex to r,g,b for rgba()
+      const _n=parseInt(p.glow.replace('#',''),16);
+      const _r=(_n>>16)&255,_g=(_n>>8)&255,_b=_n&255;
+      bg.addColorStop(0,`rgba(${_r},${_g},${_b},${(wa*.9).toFixed(2)})`);
+      bg.addColorStop(1,'transparent');
+      cx.save();
+      cx.lineWidth=3-bi;
+      cx.strokeStyle=bg;
+      cx.globalAlpha=wa*.7;
+      cx.beginPath();
+      cx.moveTo(Math.cos(ba)*p.r,Math.sin(ba)*p.r);
+      cx.lineTo(Math.cos(ba)*beamLen,Math.sin(ba)*beamLen);
+      cx.stroke();
+      cx.restore();
+    }
+    cx.globalAlpha=1;
+  }
+
+  // atmosphere glow
+  const atm=cx.createRadialGradient(0,0,p.r*.85,0,0,p.r*1.35);
+  {const _n3=parseInt(p.glow.replace('#',''),16),_r3=(_n3>>16)&255,_g3=(_n3>>8)&255,_b3=_n3&255;
+  atm.addColorStop(0,`rgba(${_r3},${_g3},${_b3},.22)`); atm.addColorStop(1,'transparent');}
+  cx.beginPath(); cx.arc(0,0,p.r*1.35,0,Math.PI*2);
+  cx.fillStyle=atm; cx.shadowColor=p.glow; cx.shadowBlur=40; cx.fill(); cx.shadowBlur=0;
+
+  // body gradient
+  const bn=parseInt(p.col.replace('#',''),16);
+  const br=(bn>>16)&255, bg_=(bn>>8)&255, bb=bn&255;
+  const body=cx.createRadialGradient(-p.r*.35,-p.r*.3,p.r*.05,p.r*.1,p.r*.1,p.r*1.1);
+  body.addColorStop(0,`rgb(${Math.min(255,br+80)},${Math.min(255,bg_+80)},${Math.min(255,bb+80)})`);
+  body.addColorStop(.45,p.col);
+  body.addColorStop(1,`rgb(${Math.max(0,br-60)},${Math.max(0,bg_-60)},${Math.max(0,bb-60)})`);
+  cx.beginPath(); cx.arc(0,0,p.r,0,Math.PI*2); cx.fillStyle=body; cx.fill();
+
+  // surface detail
+  cx.save(); cx.beginPath(); cx.arc(0,0,p.r,0,Math.PI*2); cx.clip();
+  // bands
+  for(let bi=0;bi<5;bi++){
+    const by=-p.r*.8+bi*p.r*.4;
+    cx.fillStyle=`rgba(255,255,255,${.015+bi*.01})`;
+    cx.beginPath(); cx.ellipse(0,by,p.r*.92,p.r*.1,0,0,Math.PI*2); cx.fill();
+  }
+  // craters (rocky planets)
+  if(GS.planetIdx<4){
+    [[-.35,-.2],[.3,.25],[.05,-.48],[-.15,.4]].forEach(([cx2,cy2])=>{
+      cx.fillStyle='rgba(0,0,0,.15)';
+      cx.beginPath(); cx.arc(cx2*p.r,cy2*p.r,p.r*.1,0,Math.PI*2); cx.fill();
+      cx.fillStyle='rgba(255,255,255,.04)';
+      cx.beginPath(); cx.arc(cx2*p.r-.02*p.r,cy2*p.r-.02*p.r,p.r*.09,0,Math.PI*2); cx.fill();
+    });
+  }
+  cx.restore();
+
+  // specular
+  const sp=cx.createRadialGradient(-p.r*.4,-p.r*.38,p.r*.02,-p.r*.32,-p.r*.3,p.r*.42);
+  sp.addColorStop(0,'rgba(255,255,255,.28)'); sp.addColorStop(1,'transparent');
+  cx.beginPath(); cx.arc(0,0,p.r,0,Math.PI*2); cx.fillStyle=sp; cx.fill();
+
+  cx.restore();
+
+  // name label (outside scale transform)
+  cx.font=`700 12px Orbitron,monospace`;
+  cx.textAlign='center'; cx.fillStyle=p.glow;
+  cx.shadowColor=p.glow; cx.shadowBlur=14;
+  cx.fillText(p.name, p.x, p.y+p.r*(p.scale||1)+20);
+  cx.shadowBlur=0;
+
+  // approach indicator
+  if(!p.approached && GS){
+    const dist=Math.hypot(p.x-GS.x,p.y-GS.y);
+    if(dist<p.r+250){
+      const prog=1-(dist-p.r)/(250);
+      cx.beginPath(); cx.arc(p.x,p.y,p.r+12,0,Math.PI*2*prog);
+      cx.strokeStyle=`rgba(255,215,0,${.3+prog*.5})`;
+      cx.lineWidth=2.5; cx.stroke();
+      // label
+      cx.font=`700 10px Orbitron,monospace`;
+      cx.fillStyle=`rgba(255,215,0,${.5+prog*.5})`;
+      cx.textAlign='center';
+      cx.fillText(`⚠ HARС ⚠`,p.x,p.y-p.r-22);
+    }
+  }
+}
+
+function drawShip(){
+  if(!GS) return;
+  if(GS.invTimer>0 && Math.floor(GS.invTimer/6)%2===0) return;
+  cx.save(); cx.translate(GS.x,GS.y); cx.rotate(GS.angle+Math.PI/2);
+  const t=Date.now()*.003;
+
+  // engine trails
+  if(GS.thrusting){
+    const len=28+Math.sin(t*9)*10;
+    // main engine
+    const mg=cx.createLinearGradient(0,18,0,18+len);
+    mg.addColorStop(0,'rgba(60,160,255,.95)'); mg.addColorStop(.35,'rgba(140,40,255,.75)'); mg.addColorStop(1,'transparent');
+    cx.beginPath(); cx.moveTo(-5.5,17); cx.lineTo(5.5,17); cx.lineTo(2.5,17+len); cx.lineTo(-2.5,17+len); cx.closePath();
+    cx.fillStyle=mg; cx.fill();
+    // side engines
+    [-16,16].forEach(ox=>{
+      const sg=cx.createLinearGradient(ox,9,ox,9+16);
+      sg.addColorStop(0,'rgba(0,220,255,.85)'); sg.addColorStop(1,'transparent');
+      cx.beginPath(); cx.moveTo(ox-3.5,9); cx.lineTo(ox+3.5,9); cx.lineTo(ox+1.5,23); cx.lineTo(ox-1.5,23); cx.closePath();
+      cx.fillStyle=sg; cx.fill();
+    });
+    // engine glow
+    cx.beginPath(); cx.arc(0,19,9,0,Math.PI*2);
+    const eg=cx.createRadialGradient(0,19,0,0,19,9);
+    eg.addColorStop(0,'rgba(100,180,255,.5)'); eg.addColorStop(1,'transparent');
+    cx.fillStyle=eg; cx.fill();
+  }
+
+  // hull
+  const hg=cx.createLinearGradient(-18,20,-4,-24);
+  hg.addColorStop(0,'#071830'); hg.addColorStop(.45,'#0d3060'); hg.addColorStop(1,'#0a2248');
+  cx.beginPath();
+  cx.moveTo(0,-26); cx.bezierCurveTo(9,-15,17,5,17,17);
+  cx.lineTo(11,22); cx.lineTo(0,14); cx.lineTo(-11,22); cx.lineTo(-17,17);
+  cx.bezierCurveTo(-17,5,-9,-15,0,-26);
+  cx.fillStyle=hg; cx.fill();
+  // hull edge glow
+  cx.strokeStyle='rgba(0,210,255,.85)'; cx.lineWidth=1.4;
+  cx.shadowColor='rgba(0,210,255,.55)'; cx.shadowBlur=11;
+  cx.stroke(); cx.shadowBlur=0;
+
+  // wings
+  [[17,17,30,26,11,22],[-17,17,-30,26,-11,22]].forEach(([x1,y1,x2,y2,x3,y3])=>{
+    cx.beginPath(); cx.moveTo(x1,y1); cx.lineTo(x2,y2); cx.lineTo(x3,y3); cx.closePath();
+    cx.fillStyle='#060e20'; cx.fill();
+    cx.strokeStyle='rgba(0,180,255,.45)'; cx.lineWidth=.9; cx.stroke();
+    // wing detail stripe
+    cx.beginPath(); cx.moveTo(x1,y1); cx.lineTo((x1+x2)/2,(y1+y2)/2);
+    cx.strokeStyle='rgba(0,200,255,.22)'; cx.lineWidth=1; cx.stroke();
+  });
+
+  // cockpit
+  const cg=cx.createRadialGradient(-2,-13,1,0,-10,9);
+  cg.addColorStop(0,'rgba(190,248,255,.93)'); cg.addColorStop(1,'rgba(0,110,190,.3)');
+  cx.beginPath(); cx.ellipse(0,-10,7,9.5,0,0,Math.PI*2); cx.fillStyle=cg; cx.fill();
+  // cockpit rim
+  cx.strokeStyle='rgba(0,220,255,.5)'; cx.lineWidth=.8;
+  cx.beginPath(); cx.ellipse(0,-10,7,9.5,0,0,Math.PI*2); cx.stroke();
+
+  // shield warning ring
+  if(GS.shield<30){
+    cx.beginPath(); cx.arc(0,0,30,0,Math.PI*2);
+    cx.strokeStyle=`rgba(255,50,50,${.12+Math.sin(t*7)*.1})`; cx.lineWidth=7; cx.stroke();
+  }
+
+  cx.restore();
+}
+
+function drawAsteroid(a){
+  cx.save(); cx.translate(a.x,a.y); cx.rotate(a.rot);
+  if(a.sz>55){
+    const ag=cx.createRadialGradient(0,0,a.sz*.25,0,0,a.sz*1.25);
+    ag.addColorStop(0,'rgba(180,140,70,.07)'); ag.addColorStop(1,'transparent');
+    cx.beginPath(); cx.arc(0,0,a.sz*1.25,0,Math.PI*2); cx.fillStyle=ag; cx.fill();
+  }
+  const g=cx.createRadialGradient(-a.sz*.3,-a.sz*.28,2,0,0,a.sz);
+  g.addColorStop(0,'#7a6550'); g.addColorStop(.55,'#4a3828'); g.addColorStop(1,'#1e140c');
+  cx.beginPath();
+  cx.moveTo(a.pts[0].x,a.pts[0].y);
+  for(let i=1;i<a.pts.length;i++) cx.lineTo(a.pts[i].x,a.pts[i].y);
+  cx.closePath(); cx.fillStyle=g; cx.fill();
+  cx.strokeStyle='rgba(220,175,100,.3)'; cx.lineWidth=1; cx.stroke();
+  // surface texture
+  cx.save(); cx.clip();
+  cx.fillStyle='rgba(255,210,140,.04)';
+  cx.beginPath(); cx.ellipse(-a.sz*.32,-a.sz*.24,a.sz*.3,a.sz*.15,-.35,0,Math.PI*2); cx.fill();
+  cx.restore();
+  if(a.maxHp>1){
+    const bw=a.sz*.8, by=a.sz+4;
+    cx.fillStyle='rgba(0,0,0,.5)'; cx.fillRect(-bw/2,by,bw,3.5);
+    cx.fillStyle=`hsl(${(a.hp/a.maxHp)*115},82%,52%)`;
+    cx.fillRect(-bw/2,by,bw*(a.hp/a.maxHp),3.5);
+  }
+  cx.restore();
+}
+
+function drawBullet(b){
+  cx.save();
+  cx.shadowColor='rgba(0,230,255,.9)'; cx.shadowBlur=16;
+  cx.strokeStyle='rgba(0,245,255,.95)'; cx.lineWidth=2.8; cx.lineCap='round';
+  cx.beginPath(); cx.moveTo(b.x,b.y);
+  const nb=Math.hypot(b.vx,b.vy)||1;
+  cx.lineTo(b.x-b.vx/nb*12,b.y-b.vy/nb*12); cx.stroke();
+  cx.beginPath(); cx.arc(b.x,b.y,3,0,Math.PI*2);
+  cx.fillStyle='#ffffff'; cx.fill();
+  cx.shadowBlur=0; cx.restore();
+}
+
+function drawPickup(p){
+  cx.save(); cx.translate(p.x,p.y); p.angle+=.06; cx.rotate(p.angle);
+  cx.shadowColor=p.col; cx.shadowBlur=20;
+  cx.beginPath(); cx.arc(0,0,14,0,Math.PI*2);
+  cx.strokeStyle=p.col+'bb'; cx.lineWidth=2; cx.stroke();
+  cx.beginPath(); cx.arc(0,0,7,0,Math.PI*2);
+  cx.fillStyle=p.col+'22'; cx.fill(); cx.shadowBlur=0;
+  cx.font='13px Arial'; cx.textAlign='center'; cx.textBaseline='middle';
+  cx.fillStyle=p.col; cx.fillText(p.type==='fuel'?'⚡':'🛡',0,1);
+  cx.restore();
+}
+
+function drawParticles(){
+  OB.particles.forEach(p=>{
+    cx.globalAlpha=p.life*.88;
+    cx.beginPath(); cx.arc(p.x,p.y,p.sz*p.life,0,Math.PI*2);
+    cx.fillStyle=p.col; cx.shadowColor=p.col; cx.shadowBlur=7; cx.fill(); cx.shadowBlur=0;
+  }); cx.globalAlpha=1;
+}
+
+function drawFloats(){
+  OB.floats.forEach(f=>{
+    cx.globalAlpha=f.life;
+    cx.font=`700 ${f.sz}px Orbitron,monospace`;
+    cx.textAlign='center'; cx.fillStyle=f.col;
+    cx.shadowColor=f.col; cx.shadowBlur=14;
+    cx.fillText(f.txt,f.x,f.y); cx.shadowBlur=0;
+  }); cx.globalAlpha=1;
+}
+
+// ═══════════════════════════════
+// PHYSICS CONSTANTS
+// ═══════════════════════════════
+const ACCEL=.18,ROT=.054,FRIC=.988,BSPD=14,MAXSPD=8.2;
+const keys={};
+const mb={L:false,R:false,T:false,F:false};
+document.addEventListener('keydown',e=>{keys[e.key]=true;
+  if([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault();});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+['mL','mR','mT','mF'].forEach((id,ki)=>{
+  const kn=['L','R','T','F'][ki];
+  const el=document.getElementById(id); if(!el)return;
+  el.addEventListener('touchstart',e=>{mb[kn]=true;e.preventDefault();},{passive:false});
+  el.addEventListener('touchend',e=>{mb[kn]=false;e.preventDefault();},{passive:false});
+  el.addEventListener('mousedown',()=>mb[kn]=true);
+  el.addEventListener('mouseup',()=>mb[kn]=false);
+});
+if('ontouchstart' in window||navigator.maxTouchPoints>0)
+  document.getElementById('mCtrl').style.display='flex';
+
+// ═══════════════════════════════
+// UPDATE
+// ═══════════════════════════════
+function update(){
+  if(!GS||!GS.running||GS.qOpen) return;
+  GS.invTimer=Math.max(0,GS.invTimer-1);
+
+  if(keys['ArrowLeft']||keys['a']||mb.L) GS.angle-=ROT;
+  if(keys['ArrowRight']||keys['d']||mb.R) GS.angle+=ROT;
+
+  GS.thrusting=(keys['ArrowUp']||keys['w']||mb.T)&&GS.fuel>0;
+  if(GS.thrusting){
+    GS.vx+=Math.cos(GS.angle)*ACCEL; GS.vy+=Math.sin(GS.angle)*ACCEL;
+    GS.fuel=Math.max(0,GS.fuel-.35);
+  }
+  if(!GS.thrusting&&GS.fuel<100) GS.fuel=Math.min(100,GS.fuel+.045);
+
+  const spd=Math.hypot(GS.vx,GS.vy);
+  if(spd>MAXSPD){GS.vx=GS.vx/spd*MAXSPD;GS.vy=GS.vy/spd*MAXSPD;}
+  GS.vx*=FRIC; GS.vy*=FRIC;
+  GS.x+=GS.vx; GS.y+=GS.vy;
+  scrollBg(GS.vx,GS.vy);
+  if(GS.x<-55)GS.x=W+55; if(GS.x>W+55)GS.x=-55;
+  if(GS.y<-55)GS.y=H+55; if(GS.y>H+55)GS.y=-55;
+
+  // shoot
+  if(GS.shootCool>0) GS.shootCool--;
+  if((keys[' ']||mb.F)&&GS.shootCool<=0){
+    GS.shootCool=10;
+    OB.bullets.push({
+      x:GS.x+Math.cos(GS.angle)*25,y:GS.y+Math.sin(GS.angle)*25,
+      vx:GS.vx+Math.cos(GS.angle)*BSPD,vy:GS.vy+Math.sin(GS.angle)*BSPD,
+      life:72});
+  }
+
+  // combo decay
+  if(GS.comboTimer>0){GS.comboTimer--;
+    if(GS.comboTimer<=0){GS.combo=1;document.getElementById('comboBox').style.opacity='0';}}
+
+  // asteroid spawn
+  OB.asteroidTimer++;
+  const aRate=Math.max(60,175-GS.planetIdx*14);
+  if(OB.asteroidTimer>=aRate&&OB.asteroids.length<14){spawnAsteroid();OB.asteroidTimer=0;}
+
+  // target planet scale-in + warp entry beam fade
+  if(OB.targetPlanet){
+    if(OB.targetPlanet.scale<1)
+      OB.targetPlanet.scale=Math.min(1,OB.targetPlanet.scale+.012);
+    if(OB.targetPlanet.warpAlpha>0)
+      OB.targetPlanet.warpAlpha=Math.max(0,OB.targetPlanet.warpAlpha-.018);
+    OB.targetPlanet.pulse=(OB.targetPlanet.pulse||0)+.05;
+    OB.targetPlanet.rot+=OB.targetPlanet.rs;
+  }
+
+  // bullets
+  for(let i=OB.bullets.length-1;i>=0;i--){
+    const b=OB.bullets[i];
+    b.x+=b.vx;b.y+=b.vy;b.life--;
+    if(b.life<=0){OB.bullets.splice(i,1);continue;}
+    let hit=false;
+    for(let j=OB.asteroids.length-1;j>=0;j--){
+      const a=OB.asteroids[j];
+      if(Math.hypot(b.x-a.x,b.y-a.y)<a.sz+2){
+        hit=true; a.hp--;
+        spawnParticles(b.x,b.y,'#ffaa44',5,2);
+        if(a.hp<=0){
+          const pts=(60+Math.floor(a.sz))*GS.combo;
+          GS.score+=pts; GS.kills++;
+          GS.combo=Math.min(8,GS.combo+1); GS.comboTimer=220;
+          document.getElementById('comboBox').style.opacity='1';
+          document.getElementById('comboNum').textContent=GS.combo;
+          spawnParticles(a.x,a.y,'#ffcc55',18,4.5);
+          addFloat(a.x,a.y-26,'+'+pts,'#ffd700');
+          if(Math.random()<.25) spawnPickup(a.x,a.y);
+          OB.asteroids.splice(j,1);
+        }
+        break;
+      }
+    }
+    if(hit) OB.bullets.splice(i,1);
+  }
+
+  // asteroids move
+  OB.asteroids.forEach(a=>{
+    a.x+=a.vx;a.y+=a.vy;a.rot+=a.rs;
+    if(a.x<-130)a.x=W+130;if(a.x>W+130)a.x=-130;
+    if(a.y<-130)a.y=H+130;if(a.y>H+130)a.y=-130;
+  });
+
+  // ship-asteroid collision
+  if(GS.invTimer<=0){
+    for(let i=OB.asteroids.length-1;i>=0;i--){
+      const a=OB.asteroids[i];
+      if(Math.hypot(a.x-GS.x,a.y-GS.y)<a.sz*.7+14){
+        OB.asteroids.splice(i,1);
+        takeDamage(20); spawnParticles(GS.x,GS.y,'#00ccff',12,3);
+        break;
+      }
+    }
+  }
+
+  // pickups
+  for(let i=OB.pickups.length-1;i>=0;i--){
+    const p=OB.pickups[i];
+    p.y+=p.vy;p.life-=p.decay;p.angle+=.055;
+    if(Math.hypot(p.x-GS.x,p.y-GS.y)<24){
+      if(p.type==='fuel'){GS.fuel=Math.min(100,GS.fuel+30);addFloat(GS.x,GS.y-35,'⚡ +30 ՎԱՌELIQ','#ffd700',18);}
+      else{GS.shield=Math.min(100,GS.shield+22);addFloat(GS.x,GS.y-35,'🛡 +22 ՎAHAN','#00d4ff',18);}
+      OB.pickups.splice(i,1);continue;
+    }
+    if(p.life<=0||p.y<-60) OB.pickups.splice(i,1);
+  }
+
+  // target planet approach check
+  if(OB.targetPlanet&&!OB.targetPlanet.approached){
+    const dist=Math.hypot(OB.targetPlanet.x-GS.x,OB.targetPlanet.y-GS.y);
+    if(dist<OB.targetPlanet.r+110){
+      OB.targetPlanet.approached=true;
+      GS.activePlanet=OB.targetPlanet;
+      triggerQuestion();
+    }
+  }
+
+  // particles
+  for(let i=OB.particles.length-1;i>=0;i--){
+    const p=OB.particles[i];
+    p.x+=p.vx;p.y+=p.vy;p.vy+=.04;p.life-=p.decay;
+    if(p.life<=0) OB.particles.splice(i,1);
+  }
+  for(let i=OB.floats.length-1;i>=0;i--){
+    const f=OB.floats[i];f.y+=f.vy;f.life-=f.decay;
+    if(f.life<=0) OB.floats.splice(i,1);
+  }
+
+  // fact system
+  GS.factTimer++;
+  if(GS.factTimer>=GS.factInterval){
+    GS.factTimer=0;
+    const f=GS.factQueue[GS.factQIdx%GS.factQueue.length]; GS.factQIdx++;
+    showFact(f);
+  }
+  if(factShowTimer>0){factShowTimer--;if(factShowTimer<=0)hideFact();}
+  if(visitCardTimer>0){visitCardTimer--;
+    if(visitCardTimer<=0)document.getElementById('visitCard').classList.remove('show');}
+
+  updateHUD();
+}
+
+function takeDamage(amt){
+  GS.shield=Math.max(0,GS.shield-amt);
+  GS.invTimer=90; GS.combo=1; GS.comboTimer=0;
+  document.getElementById('comboBox').style.opacity='0';
+  const v=document.createElement('div');v.className='dmg-v';
+  document.body.appendChild(v);setTimeout(()=>v.remove(),660);
+  if(GS.shield<=0){
+    GS.lives--;GS.shield=GS.lives>0?80:0;
+    updateLivesUI();
+    spawnParticles(GS.x,GS.y,'#ff4444',26,5);
+    addFloat(GS.x,GS.y-44,'−1 ԿՅԱՆՔ','#ff4466',19);
+    if(GS.lives<=0) endGame(false);
+  }
+}
+
+// ═══════════════════════════════
+// HUD
+// ═══════════════════════════════
+function updateHUD(){
+  document.getElementById('scoreNum').textContent=String(GS.score).padStart(6,'0');
+  document.getElementById('killCount').textContent='աստերոիդներ՝ '+GS.kills;
+  document.getElementById('shFill').style.width=GS.shield+'%';
+  document.getElementById('fuFill').style.width=GS.fuel+'%';
+  document.getElementById('shNum').textContent=Math.round(GS.shield);
+  document.getElementById('fuNum').textContent=Math.round(GS.fuel);
+  const sf=document.getElementById('shFill');
+  if(GS.shield>60) sf.style.background='linear-gradient(90deg,#00f5ff,#0055ff)';
+  else if(GS.shield>30) sf.style.background='linear-gradient(90deg,#ffd700,#ff6600)';
+  else sf.style.background='linear-gradient(90deg,#ff2222,#ff8888)';
+}
+function updateLivesUI(){
+  const el=document.getElementById('livesRow');if(!el)return;
+  el.innerHTML='';
+  for(let i=0;i<3;i++){
+    const s=document.createElement('span');
+    s.className='lship'+(i>=GS.lives?' dead':'');
+    s.textContent='🚀';el.appendChild(s);
+  }
+}
+
+// ═══════════════════════════════
+// QUESTION
+// ═══════════════════════════════
+let qTimerInt=null,qLeft=0,savedVel={vx:0,vy:0};
+
+function triggerQuestion(){
+  if(GS.qOpen)return;
+  GS.qOpen=true;GS.qAnswered=false;
+  savedVel={vx:GS.vx,vy:GS.vy};
+  GS.vx*=.06;GS.vy*=.06;
+  hideFact();
+
+  const pd=PLANETS[GS.planetIdx];
+  const q=GS.qPool[GS.qIdx%GS.qPool.length];GS.qIdx++;
+
+  document.getElementById('apIcon').textContent=pd.emoji;
+  document.getElementById('apIcon').style.background=pd.col+'33';
+  document.getElementById('apIcon').style.border=`2px solid ${pd.col}66`;
+  document.getElementById('apName').textContent=pd.name;
+  document.getElementById('apSub').textContent='Պատասխանիր՝ ուղեծիր մտնելու համար!';
+  document.getElementById('apQtext').textContent=q.q;
+  document.getElementById('apExplain').className='ap-explain';
+  document.getElementById('apExplain').textContent='';
+  const cb=document.getElementById('apContBtn');cb.className='';cb.onclick=null;
+
+  const optsEl=document.getElementById('apOpts');optsEl.innerHTML='';
+  ['A','B','C','D'].forEach((l,i)=>{
+    const btn=document.createElement('button');btn.className='ap-opt';
+    btn.innerHTML=`<span class="ap-opt-l">${l}</span>${q.a[i]}`;
+    btn.addEventListener('click',()=>{if(!GS.qAnswered)doAnswer(i,btn,q);});
+    optsEl.appendChild(btn);
+  });
+
+  document.getElementById('approachPanel').classList.add('open');
+  qLeft=25;startQTimer();
+}
+
+function startQTimer(){
+  clearInterval(qTimerInt);
+  setTimerUI(25,25);
+  qTimerInt=setInterval(()=>{
+    qLeft--;setTimerUI(qLeft,25);
+    if(qLeft<=0){clearInterval(qTimerInt);if(!GS.qAnswered)doAnswer(-1,null,PLANETS[GS.planetIdx].questions[GS.qIdx-1]||PLANETS[GS.planetIdx].questions[0]);}
+  },1000);
+}
+
+function setTimerUI(v,max){
+  const circ=113.1,off=circ*(1-v/max);
+  const r=document.getElementById('apTring');if(!r)return;
+  r.style.strokeDashoffset=off;
+  r.style.stroke=v>8?'#00ccff':v>4?'#ffd700':'#ff4444';
+  const n=document.getElementById('apTnum');if(n){n.textContent=v;n.style.color=v<=5?'#ff6666':'#fff';}
+}
+
+function doAnswer(idx,btn,q){
+  if(GS.qAnswered)return;
+  GS.qAnswered=true;clearInterval(qTimerInt);
+  GS.totalQ++;
+
+  document.querySelectorAll('.ap-opt').forEach(b=>b.disabled=true);
+  const allOpts=document.querySelectorAll('.ap-opt');
+  if(allOpts[q.r])allOpts[q.r].classList.add('correct');
+
+  const pd=PLANETS[GS.planetIdx];
+  const correct=idx===q.r;
+  if(correct){
+    GS.correctQ++;
+    const bonus=(400+qLeft*18)*GS.combo;
+    GS.score+=bonus;
+    GS.combo=Math.min(8,GS.combo+1);GS.comboTimer=300;
+    document.getElementById('comboBox').style.opacity='1';
+    document.getElementById('comboNum').textContent=GS.combo;
+    GS.shield=Math.min(100,GS.shield+20);
+    addFloat(GS.x,GS.y-55,'+'+bonus+' ✦','#00ffaa',23);
+    showQExplain('✅ '+q.e,true);
+  } else {
+    if(btn)btn.classList.add('wrong');
+    takeDamage(30);
+    GS.combo=1;GS.comboTimer=0;
+    document.getElementById('comboBox').style.opacity='0';
+    showQExplain('❌ '+q.e,false);
+  }
+
+  showVisitCard(pd,correct);
+  updateHUD();
+
+  const cb=document.getElementById('apContBtn');
+  cb.className='show';
+  cb.onclick=()=>closeQuestion(correct);
+}
+
+function showQExplain(txt,ok){
+  const el=document.getElementById('apExplain');
+  el.textContent=txt;el.className='ap-explain '+(ok?'ok':'fail');
+}
+
+function closeQuestion(correct){
+  document.getElementById('approachPanel').classList.remove('open');
+  GS.qOpen=false;
+  GS.vx=savedVel.vx*.2; GS.vy=savedVel.vy*.2;
+
+  const pd=PLANETS[GS.planetIdx];
+  playWarpAnimation(pd, correct, ()=>{
+    // remove planet, advance
+    OB.targetPlanet=null;
+    GS.planetVisited.push(GS.planetIdx);
+    GS.planetIdx++;
+    if(GS.planetIdx>=PLANETS.length){
+      setTimeout(()=>endGame(true),800);
+      return;
+    }
+    rebuildQPool();
+    buildSolarMap();
+    setTimeout(()=>spawnTargetPlanet(), 1200);
+    addFloat(W/2,H/2-60,'→ ՈՒՂՂՈՒԹՅՈՒՆ՝ '+PLANETS[GS.planetIdx].name,'#ffd700',18);
+  });
+}
+
+// ─── WARP ANIMATION ───────────────────────────────
+function playWarpAnimation(pd, correct, onDone){
+  const ov=document.getElementById('warpOv');
+  const wc=document.getElementById('warpCanvas');
+  const title=document.getElementById('warpTitle');
+  const sub=document.getElementById('warpSub');
+
+  if(correct){
+    title.textContent='🚀 ՈՒՂԵԾԻՐ '+pd.name.toUpperCase()+' ՀԱՍՆՎԱԾ Է';
+    title.style.textShadow=`0 0 30px ${pd.glow}, 0 0 60px ${pd.glow}88`;
+    sub.textContent='ՎԱՅՐԷՋՔԸ ԹՈՒՅԼԱՏՐՎԱԾ Է • ՈՒՍՈՒՄՆԱՍԻՐՈՒԹՅՈՒՆԸ ՍԿՍՎԵԼ Է';
+    { const _sn=parseInt(pd.glow.replace('#',''),16); sub.style.color='rgba('+((_sn>>16)&255)+','+((_sn>>8)&255)+','+(_sn&255)+',.85)'; }
+  } else {
+    title.textContent='⚠ ԽՈՒՍԱՓՄԱՆ ՄԱՆԵՒՐ';
+    title.style.textShadow='0 0 30px rgba(255,100,100,.9)';
+    sub.textContent='ՈՒՂԵԾԻՐԸ ԲԱՑ ԹՈՂՆՎԵՑ • ՇԱՐՈՒՆԱԿՈՒՄ ԵՆՔ ԹՌԻՉՔԸ';
+    sub.style.color='rgba(255,150,150,.8)';
+  }
+
+  // resize warp canvas
+  wc.width=W; wc.height=H;
+  const wctx=wc.getContext('2d');
+
+  // speed-line parameters
+  const cx2=W/2, cy2=H/2;
+  const lineCount=correct?120:60;
+  const lines=[];
+  for(let i=0;i<lineCount;i++){
+    const ang=Math.random()*Math.PI*2;
+    const len=80+Math.random()*(Math.max(W,H)*.55);
+    const startR=correct?(20+Math.random()*60):(40+Math.random()*40);
+    const spd=correct?(6+Math.random()*14):(3+Math.random()*7);
+    const col=correct?
+      `hsla(${200+Math.random()*80},90%,${75+Math.random()*20}%,`:
+      `hsla(${0+Math.random()*30},80%,${65+Math.random()*20}%,`;
+    lines.push({ang,len,startR,r:startR,spd,col,life:1});
+  }
+
+  let frame=0; const totalFrames=correct?110:70;
+  wc.classList.add('active');
+  ov.classList.add('active');
+
+  function animFrame(){
+    frame++;
+    wctx.clearRect(0,0,W,H);
+    const progress=frame/totalFrames;
+    // radial blur overlay
+    const rg=wctx.createRadialGradient(cx2,cy2,0,cx2,cy2,Math.max(W,H)*.7);
+    const alpha=correct?
+      Math.sin(progress*Math.PI)*.18:
+      Math.sin(progress*Math.PI)*.1;
+    const hue=correct?210:0;
+    rg.addColorStop(0,`hsla(${hue},80%,95%,${alpha})`);
+    rg.addColorStop(1,'transparent');
+    wctx.fillStyle=rg; wctx.fillRect(0,0,W,H);
+
+    // speed lines
+    lines.forEach(l=>{
+      l.r+=l.spd*(1+progress*3);
+      l.life=Math.max(0,1-(l.r-(l.startR+l.len))/(l.len*.4));
+      if(l.r>l.startR+l.len*1.6) return;
+      const tailR=Math.max(l.startR,l.r-l.len*.35);
+      wctx.save();
+      wctx.translate(cx2,cy2);
+      const grad=wctx.createLinearGradient(
+        Math.cos(l.ang)*tailR, Math.sin(l.ang)*tailR,
+        Math.cos(l.ang)*l.r, Math.sin(l.ang)*l.r
+      );
+      const a=l.life*(.5+progress*.5);
+      grad.addColorStop(0,l.col+'0)');
+      grad.addColorStop(.5,l.col+(a*.6)+')');
+      grad.addColorStop(1,l.col+a+')');
+      wctx.strokeStyle=grad;
+      wctx.lineWidth=correct?(1+progress*2):.8;
+      wctx.lineCap='round';
+      wctx.beginPath();
+      wctx.moveTo(Math.cos(l.ang)*tailR,Math.sin(l.ang)*tailR);
+      wctx.lineTo(Math.cos(l.ang)*l.r,Math.sin(l.ang)*l.r);
+      wctx.stroke();
+      wctx.restore();
+    });
+
+    // planet icon in center during warp (correct only)
+    if(correct && progress>.35 && progress<.85){
+      const a=Math.sin((progress-.35)/.5*Math.PI);
+      wctx.globalAlpha=a*.9;
+      wctx.font=`${Math.floor(50+a*30)}px Arial`;
+      wctx.textAlign='center'; wctx.textBaseline='middle';
+      wctx.fillText(pd.emoji, cx2, cy2+6);
+      wctx.globalAlpha=1;
+    }
+
+    if(frame<totalFrames) requestAnimationFrame(animFrame);
+    else {
+      wctx.clearRect(0,0,W,H);
+      wc.classList.remove('active');
+      ov.classList.remove('active');
+      onDone();
+    }
+  }
+  requestAnimationFrame(animFrame);
+}
+
+// ═══════════════════════════════
+// DRAW LOOP
+// ═══════════════════════════════
+function draw(){
+  cx.clearRect(0,0,W,H);
+  drawBg();
+  drawStars();
+  if(!GS)return;
+  if(OB.targetPlanet) drawPlanet(OB.targetPlanet);
+  OB.asteroids.forEach(a=>drawAsteroid(a));
+  OB.bullets.forEach(b=>drawBullet(b));
+  OB.pickups.forEach(p=>drawPickup(p));
+  drawParticles();
+  drawShip();
+  drawFloats();
+}
+
+// ═══════════════════════════════
+// END GAME
+// ═══════════════════════════════
+function endGame(victory){
+  clearInterval(qTimerInt);
+  if(GS)GS.running=false;
+  document.getElementById('approachPanel').classList.remove('open');
+  hideFact();
+
+  const pct=GS&&GS.totalQ?Math.round(GS.correctQ/GS.totalQ*100):0;
+  const planets=GS?GS.planetVisited.length:0;
+  document.getElementById('endLogo').textContent=victory?'🏆 ԱՌԱՔԵԼՈՒԹՅՈՒՆ':'💀 ՆԱՎԸ ՈՉՆՉԱՑՎԵՑ';
+  document.getElementById('endSub').textContent=victory?'ԱՐԵԳԱԿՆԱՅԻՆ ՀԱՄԱԿԱՐԳՆ ՈՒՍՈՒՄՆԱՍԻՐՎԱԾ Է!':'ՈՉՆՉԱՑՎԱԾ Է ԲԱՑ ՏԻԵԶԵՐՔՈՒՄ';
+  document.getElementById('endStats').innerHTML=`
+    <div class="ov-st"><div class="ov-sv">${GS?String(GS.score).padStart(6,'0'):'000000'}</div><div class="ov-sl">ՄԻԱՎՈՐ</div></div>
+    <div class="ov-st"><div class="ov-sv">${GS?GS.correctQ:0}/${GS?GS.totalQ:0}</div><div class="ov-sl">ՊԱՏԱՍԽԱՆ</div></div>
+    <div class="ov-st"><div class="ov-sv">${pct}%</div><div class="ov-sl">ՃՇՏՈՒԹՅՈՒՆ</div></div>
+    <div class="ov-st"><div class="ov-sv">${planets}/8</div><div class="ov-sl">ՄՈԼՈՐԱԿ</div></div>
+    <div class="ov-st"><div class="ov-sv">${GS?GS.kills:0}</div><div class="ov-sl">ԱՍՏԵՐՈԻԴ</div></div>
+  `;
+  document.getElementById('endOv').classList.remove('hidden');
+}
+
+// ═══════════════════════════════
+// MAIN LOOP
+// ═══════════════════════════════
+function loop(){ update(); draw(); requestAnimationFrame(loop); }
+
+// answer shortcuts
+document.addEventListener('keydown',e=>{
+  if(!GS||!GS.qOpen||GS.qAnswered)return;
+  const m={'1':0,'2':1,'3':2,'4':3,'a':0,'b':1,'c':2,'d':3};
+  const i=m[e.key.toLowerCase()];
+  if(i!==undefined){const o=document.querySelectorAll('.ap-opt');if(o[i]&&!o[i].disabled)o[i].click();}
+});
+
+document.getElementById('startBtn').addEventListener('click',()=>{
+  document.getElementById('introOv').classList.add('hidden');
+  newGame(); GS.running=true;
+});
+document.getElementById('restartBtn').addEventListener('click',()=>{
+  document.getElementById('endOv').classList.add('hidden');
+  newGame(); GS.running=true;
+});
+
+loop();
+</script>
+</body>
+</html>
