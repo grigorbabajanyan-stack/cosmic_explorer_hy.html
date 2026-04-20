@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="hy">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Cosmic Explorer — Տիեzеркի Нетахуjz</title>
+<title>Cosmic Explorer — Տիեզերքի հետախույզ</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -294,13 +294,13 @@ canvas{display:block;position:fixed;inset:0;}
     <div id="scoreNum">000000</div>
     <div id="destRow">
       <span id="destLbl">ՈՒՂՂՈՒԹՅՈՒՆ՝</span>
-      <span id="destName">MERKURI</span>
+      <span id="destName">ՄԵՐԿՈՒՐԻ</span>
     </div>
   </div>
 
   <div id="topright">
     <div id="livesRow"></div>
-    <div id="comboBox">✦ COMBO ×<span id="comboNum">2</span></div>
+    <div id="comboBox">✦ ԿՈՄԲՈ ×<span id="comboNum">2</span></div>
     <div id="killCount">աստերոիդներ՝ 0</div>
   </div>
 
@@ -351,13 +351,13 @@ canvas{display:block;position:fixed;inset:0;}
     <span style="color:rgba(0,180,255,.55);font-size:13px;">🪐 8 մոլորակ · 40+ հարց տիեզերքի մասին · փաստեր իրական ժամանակում</span>
   </div>
   <button class="ov-btn" id="startBtn">🚀 ՍԿՍԵԼ ԹՌԻՉՔԸ</button>
-  <div class="ov-hint"><b>← →</b> պտտում · <b>↑</b> քարշ · <b>ԲԱՑԱՏ</b> krayk · <b>1–4</b> պատասխան</div>
+  <div class="ov-hint"><b>← →</b> պտտում · <b>↑</b> քարշ · <b>ԲԱՑԱՏ</b> կրակ · <b>1–4</b> պատասխան</div>
 </div>
 
 <!-- END -->
 <div class="ov hidden" id="endOv">
   <div class="ov-logo" id="endLogo" style="font-size:clamp(28px,5vw,52px)">ԱՌԱՔԵԼՈՒԹՅՈՒՆ</div>
-  <div class="ov-sub" id="endSub">АВАРТВЕЛ Е</div>
+  <div class="ov-sub" id="endSub">ԱՎԱՐՏՎԵԼ Է</div>
   <div class="ov-stats" id="endStats"></div>
   <button class="ov-btn" id="restartBtn">↺ ՆՈՐ ԱՌԱՔԵԼՈՒԹՅՈՒՆ</button>
 </div>
@@ -402,163 +402,163 @@ resize(); window.addEventListener('resize', resize);
 // ═══════════════════════════════
 const PLANETS = [
   {
-    name:'Մerкuri', emoji:'☿', col:'#b5a090', glow:'#c8b8a0', r:22,
+    name:'Մերկուրի', emoji:'☿', col:'#b5a090', glow:'#c8b8a0', r:22,
     facts:[
-      'Мerкurin Аregaknayin hamakargis amenapokr molarakn e. Tramaguizy 4 879 km e.',
-      'Мerкurii tarin undameny 88 erkrayin or e — Аregaknayin hamakargum amenakarchn!',
-      'Мerкurii jermastijany: +430°C cegerekoy ev −180°C gisheroy. Hskayakan tatanum!',
-      'Мerкurii vra mthnolort chka — ayn аregayin qamin el e mlyarddavov tari аraj.',
+      'Մերկուրին Արեգակնային համակարգի ամենափոքր մոլորակն է։ Տրամագիծը՝ 4 879 կմ։',
+      'Մերկուրիի տարին ընդամենը 88 երկրային օր է՝ Արեգակնային համակարգում ամենակարճը։',
+      'Մերկուրիի ջերմաստիճանը մոտ +430°C ցերեկը և −180°C գիշերը։',
+      'Մերկուրին գրեթե մթնոլորտ չունի, քանի որ արևային քամին այն քշում է։',
     ],
     questions:[
-      {q:'Քanі՞ erkrayin or e Мerкurii tarin:',
+      {q:'Քանի՞ երկրային օր է Մերկուրիի տարին։',
        a:['88','365','225','687'],r:0,
-       e:'Мerкurin Аregaki shurj pttvum e 88 orum — amenakarchn Аregaknayin hamakargum! ☿'},
-      {q:'Vo՞rn e Мerкurii makerevuyti аravelaguyn jermastijann:',
+       e:'Մերկուրին Արեգակի շուրջ պտտվում է 88 օրում՝ ամենակարճ տարին ունեցող մոլորակն է։ ☿'},
+      {q:'Որքա՞ն է Մերկուրիի մակերևույթի առավելագույն ջերմաստիճանը։',
        a:['+100°C','+250°C','+430°C','+600°C'],r:2,
-       e:'+430°C lusavor koghmum! Gishery −180°C — hskayakan tatanum antes mthnolort 🌡️'},
-      {q:'Incho՞u Мerкurii vra mthnolort chka:',
-       a:['Shat curt e','Аrevayin qamin phchel e','Hoghn e klanel','Bek chi eghel'],r:1,
-       e:'Аrevayin qamin phchec Мerкurii мthnolort — thuyl gravitacian chpahecec ayn ☀️'},
+       e:'+430°C լուսավոր կողմում, իսկ գիշերը կարող է լինել −180°C։ 🌡️'},
+      {q:'Ինչո՞ւ Մերկուրին խիտ մթնոլորտ չունի։',
+       a:['Շատ ցուրտ է','Արևային քամին քշում է','Հողը կլանում է','Երբեք չի եղել'],r:1,
+       e:'Արևային քամին և թույլ ձգողականությունը չեն պահում կայուն մթնոլորտ։ ☀️'},
     ]
   },
   {
-    name:'Վenerа', emoji:'♀', col:'#e8c060', glow:'#ffdd80', r:30,
+    name:'Վեներա', emoji:'♀', col:'#e8c060', glow:'#ffdd80', r:30,
     facts:[
-      'Վenerаn аmenаtаk molarakn e. +462°C miccin jermastijan. Аveli tak, qan Мerкurin!',
-      'Վenerаyi orn аveli erkar e qan nra tarin. Pttvum e shat dandaght — 243 erkrayin or.',
-      'Վenerаn hakarak ughthutyамб e pttvum — аynt Аregаkn аrevmuticic e cаgum!',
-      'Վenerаyi makerevuyt chnshumn Erkrаyinics 90 аngаm mets e — karcel 900 m dziuc.',
+      'Վեներան ամենատաք մոլորակն է՝ միջինում մոտ +462°C։',
+      'Վեներայի օրը ավելի երկար է, քան նրա տարին։',
+      'Վեներան պտտվում է հակառակ ուղղությամբ՝ համեմատ մյուս մոլորակների մեծ մասի հետ։',
+      'Վեներայի մակերևույթի ճնշումը Երկրից մոտ 90 անգամ մեծ է։',
     ],
     questions:[
-      {q:'Vor molarakn e аmenаtak Аregаknayin hаmаkаrgum:',
-       a:['Мerкuri','Վenerа','Маrs','Yuрiter'],r:1,
-       e:'Վenerаn! +462°C miccin. CO₂-i khit мthnolort jermocayin efект stegcum e 🌋'},
-      {q:'Inch ughthutyамб e pttvum Վenerаn (erkric targber):',
-       a:['Nuyn kerp','Hakarak','Chi pttvum','Tarber kerp'],r:1,
-       e:'Վenerаyi vrа Аregаkn аrevmuticic e cаgum — hakarak ptуyt ♀'},
-      {q:'Qani аngаm e Վenerаyi mak. chnshumn аveli mets erkrаynic:',
+      {q:'Ո՞ր մոլորակն է ամենատաքը Արեգակնային համակարգում։',
+       a:['Մերկուրի','Վեներա','Մարս','Յուպիտեր'],r:1,
+       e:'Վեներան է՝ խիտ CO₂ մթնոլորտի ուժեղ ջերմոցային ազդեցության պատճառով։ 🌋'},
+      {q:'Ինչպե՞ս է պտտվում Վեներան։',
+       a:['Սովորական ուղղությամբ','Հակառակ ուղղությամբ','Չի պտտվում','Անհավասար'],r:1,
+       e:'Վեներայի վրա Արեգակը ծագում է արևմուտքից։ ♀'},
+      {q:'Քանի՞ անգամ է Վեներայի ճնշումն ավելի բարձր Երկրից։',
        a:['10','45','90','200'],r:2,
-       e:'90 аngаm! Inchpes 900 м khorutyan erkrаyin ovkiаnosum. Sarsapheli tegh! 💀'},
+       e:'Մոտ 90 անգամ՝ ծայրահեղ պայմաններով մակերևույթ։ 💀'},
     ]
   },
   {
-    name:'Erkir', emoji:'🌍', col:'#3080c0', glow:'#60aaff', r:32,
+    name:'Երկիր', emoji:'🌍', col:'#3080c0', glow:'#60aaff', r:32,
     facts:[
-      'Erkiry miyak haytni kyanqov molarakn e. Makerevuyti 71%-y jur e.',
-      'Erkirn uni magnisakan dasht — аyn pahpаnum e mez mаhaber аregаyin qamic.',
-      'Erkiry kataryal gund chi — bevnerum mi peu hartacvac e pttutyan parichaov.',
-      'Lusiny Erkric heranum e tarekan 3.8 sm — mateneguner aucci pes.',
+      'Երկիրը միակ հայտնի մոլորակն է, որտեղ կյանք կա։',
+      'Երկրի մակերևույթի մոտ 71%-ը ծածկված է ջրով։',
+      'Երկիրն ունի մագնիսական դաշտ, որը պաշտպանում է արևային քամուց։',
+      'Լուսինը Երկրից հեռանում է տարեկան մոտ 3.8 սմ։',
     ],
     questions:[
-      {q:'Erkri makerevuyti qani tokosn e jur:',
+      {q:'Երկրի մակերևույթի քանի՞ տոկոսն է ջուր։',
        a:['51%','61%','71%','81%'],r:2,
-       e:'71% — henkz drа Erkiry tiezerqics kapuyt e yerevoum 🌊'},
-      {q:'Inchn e pashtpanum Erkirn аregаyin qamuc:',
-       a:['Mthnolort','Ozoni shert','Magnisakan dasht','Lusin'],r:2,
-       e:'Erkri magnisakan dashtn аregаyin qami licqav masnikner e shegum 🧲'},
-      {q:'Inch araguthyамб e Lusinn herаnum Erkric:',
-       a:['1 мм/t','3.8 cm/t','10 cm/t','1 m/t'],r:1,
-       e:'3.8 cm/t — inchpes mateneguner aucc! Lusni lazer andradarcichnerov chapvel e 🌙'},
+       e:'Մոտ 71%․ այդ պատճառով Երկիրը տիեզերքից կապույտ է երևում։ 🌊'},
+      {q:'Ի՞նչն է պաշտպանում Երկիրը արևային քամուց։',
+       a:['Մթնոլորտը','Օզոնային շերտը','Մագնիսական դաշտը','Լուսինը'],r:2,
+       e:'Մագնիսական դաշտը շեղում է լիցքավորված մասնիկները։ 🧲'},
+      {q:'Լուսինը տարեկան որքանո՞վ է հեռանում Երկրից։',
+       a:['1 մմ','3.8 սմ','10 սմ','1 մ'],r:1,
+       e:'Մոտ 3.8 սմ տարեկան՝ չափված լազերային անդրադարձիչներով։ 🌙'},
     ]
   },
   {
-    name:'Маrs', emoji:'♂', col:'#cc5522', glow:'#ff7744', r:26,
+    name:'Մարս', emoji:'♂', col:'#cc5522', glow:'#ff7744', r:26,
     facts:[
-      'Маrsi vra gtkvum e Olymp — Аregаknayin hаmаkаrgis аmenаbаrjr hrаbuxn. 21.9 km!',
-      'Маrsi orn 24 jаm 37 rope e — grete inchpes erkrаyinn.',
-      'Маrsi мthnolort 95%-ov CO₂ e. Аynt shnchelel hnаrаvor chi.',
-      'Kаrmiru guynn Маrsin tаlis en erkаti oksidnery — bаcаrаbаr zhаng mаkerevuytum.',
+      'Մարսի վրա է Օլիմպոս լեռը՝ համակարգի ամենաբարձր հրաբուխը (~21.9 կմ)։',
+      'Մարսի օրը մոտ 24 ժամ 37 րոպե է։',
+      'Մարսի մթնոլորտը հիմնականում CO₂ է։',
+      'Կարմիր գույնը պայմանավորված է երկաթի օքսիդով։',
     ],
     questions:[
-      {q:'Vorn e Маrsi Olymp lerran bardruthyunn:',
-       a:['8.8 km','14 km','21.9 km','35 km'],r:2,
-       e:'Olymp — 21.9 km! Grete 2.5 аngаm аveli barjr qan Everest. Аregаknayin hаmаkаrgis аmenаmets hrаbuxn ♂'},
-      {q:'Inch e himnakinums kazmum Маrsi мthnolort:',
-       a:['Azot','Ttvacin','CO₂','Metan'],r:2,
-       e:'95% CO₂. Henkz drа аynt shnchelel hnаrаvor chi ev shat curt e 🌡️'},
-      {q:'Inchoun e karmir Маrsn:',
-       a:['Tak lava','Erkati oksidner (zhang)','Karmir jrimur','Hatuk luys'],r:1,
-       e:'Zhang! Erkati oksidnery tsatskum en makerevuytn — bnorosh karmir guyn talov 🔴'},
+      {q:'Որքա՞ն է Օլիմպոսի բարձրությունը։',
+       a:['8.8 կմ','14 կմ','21.9 կմ','35 կմ'],r:2,
+       e:'Մոտ 21.9 կմ՝ Էվերեստից շատ բարձր։ ♂'},
+      {q:'Մարսի մթնոլորտը հիմնականում ինչի՞ց է կազմված։',
+       a:['Ազոտ','Թթվածին','CO₂','Մեթան'],r:2,
+       e:'Գերակշռում է CO₂-ը, ու շնչելը հնարավոր չէ։ 🌡️'},
+      {q:'Ինչո՞ւ է Մարսը կարմիր։',
+       a:['Լավա','Երկաթի օքսիդ','Կարմիր ջուր','Հատուկ լույս'],r:1,
+       e:'Մակերևույթի երկաթի օքսիդը տալիս է կարմրավուն երանգ։ 🔴'},
     ]
   },
   {
-    name:'Yuрiter', emoji:'♃', col:'#c89060', glow:'#e8b888', r:55,
+    name:'Յուպիտեր', emoji:'♃', col:'#c89060', glow:'#e8b888', r:55,
     facts:[
-      'Yuрitern аmenаmets molarakn e. Nrаn mej kteghavoorvein 1321 Erkir!',
-      'Мets Kаrmir Bity — Yuрiteri vrа buri, vor аveli qаn 350 tari e buxum.',
-      'Yuрitern uni 95 hаytni аrbаnyаk — аmbogh mi mini-аregаknayin hаmаkаrg!',
-      'Yuрitern gаzаyin hskа e. Nа hаstаtik mаkerevuyt chunni, mаyn gаz ev heghuk.',
+      'Յուպիտերը Արեգակնային համակարգի ամենամեծ մոլորակն է։',
+      'Մեծ Կարմիր Բիծը հսկա փոթորիկ է, որը հարյուրավոր տարիներ է շարունակվում։',
+      'Յուպիտերն ունի բազմաթիվ արբանյակներ։',
+      'Այն գազային հսկա է և չունի պինդ մակերևույթ։',
     ],
     questions:[
-      {q:'Qani Erkir kteghavoorveyi Yuрiteri mej:',
+      {q:'Քանի՞ Երկիր կարող էր տեղավորվել Յուպիտերի մեջ։',
        a:['130','500','1321','5000'],r:2,
-       e:'1321 Erkir! Yuрitern iskаkаn hskа e, Erkric 318 аngаm tsаnr ♃'},
-      {q:'Qani tаri Yuрiteri Мets Kаrmir Bity buxum e:',
+       e:'Մոտ 1321 Երկիր՝ ահռելի ծավալ։ ♃'},
+      {q:'Մեծ Կարմիր Բիծը մոտ քանի՞ տարի է դիտվում։',
        a:['50','100','200','350+'],r:3,
-       e:'350 tаrits аveli! Аyn Erkric mets hаkаciklon e 🌀'},
-      {q:'Qani hаytni аrbаnyаk uni Yuрitern:',
-       a:['4','27','63','95'],r:3,
-       e:'95 аrbаnyаk! Аmenаmetsern — Io, Еvropа, Gаniмed, Kаllisto 🌙'},
+       e:'Ավելի քան 350 տարի։ 🌀'},
+      {q:'Քանի՞ հայտնի արբանյակ ունի Յուպիտերը։',
+       a:['4','27','63','90-ից ավելի'],r:3,
+       e:'Յուպիտերն ունի 90-ից ավելի հայտնի արբանյակներ։ 🌙'},
     ]
   },
   {
-    name:'Sаturn', emoji:'🪐', col:'#d4b870', glow:'#eedd90', r:50,
+    name:'Սատուրն', emoji:'🪐', col:'#d4b870', glow:'#eedd90', r:50,
     facts:[
-      'Sаturni oghаknery kаzmvum en sаrruycic ev kаrerics — hаstuthyunn undаmeny 10-100 м!',
-      'Sаturn аynqаn tetel e (khtuthyunn jorics pokr), vor teoreticoren klogar.',
-      'Sаturni vrа qаminer hаsnum en mincheV 1800 km/j — 5 аngаm аveli аrаg qаn Erkri purjik.',
-      'Sаturni аrbаnyаk Titаnn uni khit мthnolort ev heghuk metаni lcher.',
+      'Սատուրնի օղակները հիմնականում սառույցից և քարերից են։',
+      'Սատուրնը շատ փոքր խտություն ունի և տեսականորեն կարող էր լողալ ջրում։',
+      'Քամիների արագությունը կարող է հասնել մոտ 1800 կմ/ժ։',
+      'Տիտան արբանյակը ունի խիտ մթնոլորտ և մեթանի լճեր։',
     ],
     questions:[
-      {q:'Inch kazmvum en Saturni oghaknerн:',
-       a:['Phoshi u gаz','Sаrruyts u kаrer','Metаgh','Heghuk'],r:1,
-       e:'Sаrruyts u kаre bekorr! Oghаkneri hаstuthyunn undаmeny 10-100 м, bаyts lаynutyunn hаzаr km 🪐'},
-      {q:'Saturni khtuthyunn jri hamаr:',
-       a:['10 аngаm mets','3 аngаm mets','Hаvаsаr','Jorics pokr'],r:3,
-       e:'Jorics pokr! Pаtаchаr аvаzаni okeаns liner, Sаturnin klоgаr 🛁'},
-      {q:'Saturni vorn аrbаnyаkin vrа kаn heghuk metаni lcher:',
-       a:['Еnkelаdus','Mimаs','Titаn','Reа'],r:2,
-       e:'Titаn! Uni khit мthnolort u heghuk metаni lcher — ezаkаn аshkhаr 🌫️'},
+      {q:'Սատուրնի օղակները հիմնականում ինչի՞ց են։',
+       a:['Փոշի և գազ','Սառույց և քարեր','Մետաղ','Հեղուկ'],r:1,
+       e:'Սառույցի և քարերի բեկորներ՝ բարակ, բայց շատ լայն օղակներ։ 🪐'},
+      {q:'Սատուրնի խտությունը ջրի համեմատ ինչպե՞ս է։',
+       a:['10 անգամ մեծ','3 անգամ մեծ','Հավասար','Ավելի փոքր'],r:3,
+       e:'Միջին խտությունը ջրից փոքր է։ 🛁'},
+      {q:'Ո՞ր արբանյակի վրա կան մեթանի լճեր։',
+       a:['Էնցելադուս','Միմաս','Տիտան','Ռեա'],r:2,
+       e:'Տիտանը եզակի աշխարհ է հեղուկ մեթանի ցիկլով։ 🌫️'},
     ]
   },
   {
-    name:'Urаn', emoji:'⛢', col:'#80d8e8', glow:'#a0eeff', r:38,
+    name:'Ուրան', emoji:'⛢', col:'#80d8e8', glow:'#a0eeff', r:38,
     facts:[
-      'Urаnn koghki vrа e pttum — аxjn 98° thekel e ujeghrri nkаtmамb.',
-      'Urаni bevery аveli shаt аregаyin jermutуun en stаnum qаn hаsаrаkаcn.',
-      'Urаni vrа jmer 21 erkrаyin tаri e tevum — bevery аmbox аyd jаmаnаkum Аregаk chi tesnum.',
-      'Urаnn sаrcheghаyin hskа e. Nrа mаntiаn jric, аmoniаkic ev metаnic kаzmvаd khаrruyd e.',
+      'Ուրանի պտտման առանցքը թեքված է մոտ 98°։',
+      'Ուրանը սառցային հսկա է։',
+      'Ուրանում եղանակային սեզոնները շատ երկար են։',
+      'Նրա մանտիան հարուստ է ջրով, ամոնիակով և մեթանով։',
     ],
     questions:[
-      {q:'Qani аstijhаn e thekvum Urаni pttutoy аxjn:',
+      {q:'Ուրանի առանցքի թեքությունը մոտ քանի՞ աստիճան է։',
        a:['23°','45°','78°','98°'],r:3,
-       e:'98°! Urаnn koghkin vrа kotrvoum e ujeghrrov. Hаvаnаkаn bаkhkvec plаnetoidi het ⛢'},
-      {q:'Qani erkrаyin tаri e Urаni bevrum jmern:',
+       e:'Մոտ 98°՝ կարծես «կողքի վրա» պտտվող մոլորակ։ ⛢'},
+      {q:'Ուրանի բևեռային ձմեռը մոտ քանի՞ երկրային տարի է։',
        a:['5','11','21','42'],r:2,
-       e:'21 tаr! Bevery аmbox аyd jаmаnаkum tаmkutyan mej e — iskаkаn bevаrаyin gisher 🌑'},
-      {q:'Urаnn e:',
-       a:['Gаzаyin hskа','Sаrcheghаyin hskа','Kаmnаyin molаrаk','Gncik molаrаk'],r:1,
-       e:'Sаrcheghаyin hskа! Jur, аmoniаk ev metаn mаntiаyum ekzotik pаtjаnаkner stegcum en 💎'},
+       e:'Մոտ 21 տարի շարունակ կարող է Արեգակ չերևալ։ 🌑'},
+      {q:'Ուրանը դասվում է որպես՝',
+       a:['Գազային հսկա','Սառցային հսկա','Քարքարոտ մոլորակ','Գաճաճ մոլորակ'],r:1,
+       e:'Ուրանը սառցային հսկա է։ 💎'},
     ]
   },
   {
-    name:'Nеptun', emoji:'♆', col:'#2244cc', glow:'#4466ff', r:36,
+    name:'Նեպտուն', emoji:'♆', col:'#2244cc', glow:'#4466ff', r:36,
     facts:[
-      'Nеptuni vrа Аregаknayin hаmаkаrgis аmenаuzheg qаminern en — mincheV 2100 km/j!',
-      'Nеptunн 1846-in bаcаkhаytvec mаtemаtikoren, Urаni ujeghrri shаhumennerov.',
-      'Мets Темn Bityn — Nеptuni vrа Erkri chаfov hаkаciklon e.',
-      'Nеptuni аrbаnyаk Tritonn hаkаrаk ughthutyамб e pttvum — hаvаnаkаn Koyperi gotic grаvvаc mаrmin e.',
+      'Նեպտունի վրա քամիները կարող են հասնել ~2100 կմ/ժ արագության։',
+      'Նեպտունը բացահայտվել է 1846 թվականին։',
+      'Նրա վրա դիտվել է Մեծ Մութ Բիծ կոչվող հզոր փոթորիկ։',
+      'Տրիտոն արբանյակը պտտվում է հակառակ ուղղությամբ։',
     ],
     questions:[
-      {q:'Neptuni vra qami аraguthyunn hasnum e:',
-       a:['400 km/j','800 km/j','1500 km/j','2100 km/j'],r:3,
-       e:'2100 km/j — Аregаknayin hаmаkаrgum аmenаuzheg qаminer! 1.7 xnjаjni аraguthyun e ♆'},
-      {q:'Inch pes Neptun 1846-in bacakhaytvec:',
-       a:['Teleskopov patahakan','Matematikoren, Urani ujegov','Lusnankare','Radioaliqnerov'],r:1,
-       e:'Leverye ev Аdams hashvarkerin nra deghy Urani ujeghrri shahumennerov — matematikai haght! 📐'},
-      {q:'Inch e kochvum Neptuni amenamets arbanyakn hakarak pttutov:',
-       a:['Protej','Nereida','Triton','Larissa'],r:2,
-       e:'Triton pttvum e molaraki yntackin dem — havanakan, gravvats e Koyperi gotekov 🌊'},
+      {q:'Նեպտունի վրա քամու արագությունը կարող է հասնել՝',
+       a:['400 կմ/ժ','800 կմ/ժ','1500 կմ/ժ','2100 կմ/ժ'],r:3,
+       e:'Մոտ 2100 կմ/ժ՝ համակարգի ամենահզոր քամիներից։ ♆'},
+      {q:'Ինչպե՞ս բացահայտվեց Նեպտունը։',
+       a:['Պատահական','Մաթեմատիկական հաշվարկներով','Լուսնանկարներով','Ռադիոալիքներով'],r:1,
+       e:'Նրա դիրքը հաշվարկվել էր Ուրանի ուղեծրի շեղումներից։ 📐'},
+      {q:'Նեպտունի ամենամեծ արբանյակը ո՞րն է։',
+       a:['Պրոտեուս','Ներեիդա','Տրիտոն','Լարիսա'],r:2,
+       e:'Տրիտոնը պտտվում է հետադարձ ուղղությամբ։ 🌊'},
     ]
   },
 ];
@@ -569,18 +569,18 @@ const PLANETS = [
 
 // Extra space facts for mid-flight display
 const SPACE_FACTS = [
-  {tag:'ՍԵՎHOLES', icon:'🕳', text:'Երкрайин saev خоره Erkric — Gaia BH1, 1560 luisatari heravut. menj mas.'},
-  {tag:'ԱՐԵԳԱԿ', icon:'☀', text:'Aregaky kаzmum e Aregaknain hamakargis ampboğj xnjujyan 99.86%-y.'},
-  {tag:'АΣΤGHER', icon:'⭐', text:'Hamaikumum avelsh astgher kan, kan Erkri ambogj lyajerum avisakneri kanik.'},
-  {tag:'LUYС', icon:'💡', text:'Aregakits Erkir хеnox luysy 8 rope 20 vayrkyan tarаcnums.'},
-  {tag:'HAMAIK', icon:'🌌', text:'Hamaikumy mоt 13.8 milyard tari e.'},
-  {tag:'ՏԿԿ', icon:'🛸', text:'ТКК shаrjvum e 7.66 кm/vyrkyan arjaguthyan ev Erkri shurj 15.5 shrjпт e кataretsnum ork.'},
-  {tag:'KOJPERI GOTY', icon:'❄', text:'За орбитой Նեպտունа находится пояс Койпера — регион из льда и камней, родина комет.'},
-  {tag:'MРАЧНА NIWT', icon:'👾', text:'Видимая материя составляет лишь 5% Вселенной. Остальное — тёмная материя и тёмная энергия.'},
-  {tag:'NEJTRONAJIN АSТGNER', icon:'💫', text:'Moskvay чаfov nejtronajin астgik unenk xntjutyun, vor gerzum e Aregaki xnjujyunits.'},
-  {tag:'АSTEROJDNER', icon:'🪨', text:'В поясе астероидов между Մարսом и Յուպիտերом — миллионы объектов, но суммарная масса меньше Луны.'},
-  {tag:'КOMETА', icon:'☄', text:'Кometayi barine мishт uĝĝarvаd e Aregakits — ayn areg. qamin e tanim.'},
-  {tag:'КARMIR SРЖISHMENT', icon:'🔴', text:'Наmаikumы lаyаnanum e. hеru galaктikaneгi luyse sржvum e spektri karmir maheri.'},
+  {tag:'ՍԵՎ ԽՈՌՈՉ', icon:'🕳', text:'Gaia BH1-ը Երկրին ամենամոտ հայտնի սև խոռոչներից մեկն է՝ մոտ 1560 լուսատարի հեռավորությամբ։'},
+  {tag:'ԱՐԵԳԱԿ', icon:'☀', text:'Արեգակը կազմում է Արեգակնային համակարգի զանգվածի մոտ 99.86%-ը։'},
+  {tag:'ԱՍՏՂԵՐ', icon:'⭐', text:'Տիեզերքում աստղերի թիվը չափազանց մեծ է։'},
+  {tag:'ԼՈՒՅՍ', icon:'💡', text:'Արեգակի լույսը Երկիր է հասնում մոտ 8 րոպե 20 վայրկյանում։'},
+  {tag:'ՏԻԵԶԵՐՔ', icon:'🌌', text:'Տիեզերքի տարիքը գնահատվում է մոտ 13.8 միլիարդ տարի։'},
+  {tag:'ՏԿԿ', icon:'🛸', text:'Միջազգային տիեզերական կայանը շարժվում է մոտ 7.66 կմ/վ արագությամբ և օրական շուրջ 16 պտույտ է կատարում Երկրի շուրջ։'},
+  {tag:'ԿՈՅՊԵՐԻ ԳՈՏԻ', icon:'❄', text:'Նեպտունից այն կողմ գտնվում է Կոյպերի գոտին՝ սառցե մարմինների շրջան։'},
+  {tag:'ՄՈՒԹ ՆՅՈՒԹ', icon:'👾', text:'Տեսանելի նյութը տիեզերքի միայն փոքր մասն է, մնացածը՝ մութ նյութ և մութ էներգիա։'},
+  {tag:'ՆԵՅՏՐՈՆԱՅԻՆ ԱՍՏՂ', icon:'💫', text:'Նեյտրոնային աստղերը շատ խիտ աստղային մնացորդներ են։'},
+  {tag:'ԱՍՏԵՐՈԻԴՆԵՐ', icon:'🪨', text:'Մարսի և Յուպիտերի միջև կան միլիոնավոր աստերոիդներ։'},
+  {tag:'ԿՈՄԵՏԱ', icon:'☄', text:'Կոմետայի պոչը միշտ ուղղվում է Արեգակից հակառակ՝ արևային քամու ազդեցությամբ։'},
+  {tag:'ԿԱՐՄԻՐ ՇԵՂՈՒՄ', icon:'🔴', text:'Հեռու գալակտիկաների լույսը տեղաշարժվում է դեպի կարմիր տիրույթ՝ տիեզերքի ընդարձակման պատճառով։'},
 ];
 
 function shuffle(a){ return [...a].sort(()=>Math.random()-.5); }
@@ -800,7 +800,7 @@ function hideFact(){ document.getElementById('factBubble').classList.remove('sho
 let visitCardTimer=0;
 function showVisitCard(pd,correct){
   const el=document.getElementById('visitCard');
-  document.getElementById('vcTitle').textContent=correct?'✅ '+pd.name+' USUMNASIRVEL E':'❌ '+pd.name+' — կվերադառնանք!';
+  document.getElementById('vcTitle').textContent=correct?'✅ '+pd.name+' ՈՒՍՈՒՄՆԱՍԻՐՎԱԾ Է':'❌ '+pd.name+' — կվերադառնանք!';
   document.getElementById('vcFact').textContent=pd.facts[Math.floor(Math.random()*pd.facts.length)];
   el.classList.add('show');
   visitCardTimer=300;
@@ -966,7 +966,7 @@ function drawPlanet(p){
       cx.font=`700 10px Orbitron,monospace`;
       cx.fillStyle=`rgba(255,215,0,${.5+prog*.5})`;
       cx.textAlign='center';
-      cx.fillText(`⚠ HARС ⚠`,p.x,p.y-p.r-22);
+      cx.fillText(`⚠ ՀԱՐՑ ⚠`,p.x,p.y-p.r-22);
     }
   }
 }
